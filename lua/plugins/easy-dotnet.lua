@@ -40,15 +40,21 @@ return {
 			},
 		})
 
-		-- AUTO-BUILD ON SAVE
+		-- SILENT AUTO-BUILD ON SAVE (no buffer opens unless there are errors)
 		vim.api.nvim_create_autocmd("BufWritePost", {
 			pattern = "*.cs",
 			callback = function()
-				-- Use build_default to reuse previous project selection
-				require("easy-dotnet").build_default()
+				-- Use quickfix variant for silent background builds
+				require("easy-dotnet").build_default_quickfix()
 			end,
-			desc = "Auto-build C# project on save",
+			desc = "Auto-build C# project silently on save",
 		})
+
+		-- CUSTOM WRITE-AND-BUILD COMMAND (for when you want to see build output)
+		vim.api.nvim_create_user_command("Wb", function()
+			vim.cmd("write") -- Save current buffer
+			require("easy-dotnet").build_default() -- Build with terminal output
+		end, { desc = "Write and build with terminal output" })
 
 		-- KEYBINDINGS (following <leader>c pattern for code actions)
 		local keymap = vim.keymap.set
@@ -89,5 +95,10 @@ return {
 		keymap("n", "<leader>cs", function()
 			vim.cmd("Dotnet secrets")
 		end, { desc = "[C]# Manage user [s]ecrets" })
+
+		-- Write-and-Build keymap (verbose build with terminal output)
+		keymap("n", "<leader>cW", function()
+			vim.cmd("Wb")
+		end, { desc = "[C]# [W]rite and build (verbose)" })
 	end,
 }
