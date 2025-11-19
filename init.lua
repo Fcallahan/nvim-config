@@ -1,9 +1,9 @@
 require("tuliopaim.set")
 require("tuliopaim.remap")
 
--- Ensure .NET SDK is visible to language servers (OmniSharp)
+-- Ensure .NET SDK is visible to language servers and dotnet tools are accessible
 vim.env.DOTNET_ROOT = vim.fn.expand("~/.dotnet")
-vim.env.PATH = vim.env.DOTNET_ROOT .. ":" .. vim.env.PATH
+vim.env.PATH = vim.env.DOTNET_ROOT .. ":" .. vim.fn.expand("~/.dotnet/tools") .. ":" .. vim.env.PATH
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 
