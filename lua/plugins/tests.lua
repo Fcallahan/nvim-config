@@ -12,11 +12,12 @@ return {
         require("neotest").setup({
             adapters = {
                 require("neotest-dotnet")({
+                    -- Use project-based discovery (more reliable than solution)
+                    discovery_root = "project",
                     -- Force Debug builds for better debugging experience
-                    discovery_root = "solution",
-                    -- Ensure Debug configuration
                     dotnet_additional_args = {
-                        "-c Debug"
+                        "-c",
+                        "Debug"
                     }
                 })
             }
