@@ -170,9 +170,12 @@ return {
             dap.configurations.cs = config
             dap.configurations.fsharp = config
 
+            -- Use Mason-installed netcoredbg
+            local mason_path = vim.fn.stdpath("data") .. "/mason/packages/netcoredbg/netcoredbg"
+
             dap.adapters.netcoredbg = {
                 type = 'executable',
-                command = 'netcoredbg',
+                command = mason_path,
                 args = {
                     '--interpreter=vscode',
                 }
@@ -180,7 +183,7 @@ return {
 
             dap.adapters.coreclr = {
                 type = 'executable',
-                command = 'netcoredbg',
+                command = mason_path,
                 args = {
                     '--interpreter=vscode',
                 }
@@ -194,13 +197,22 @@ return {
                 end
                 end, { desc = "DAP: Set conditional breakpoint" })
 
-            vim.keymap.set("n", "<F5>", dap.continue)
-            vim.keymap.set("n", "<F10>", dap.step_over)
-            vim.keymap.set("n", "<F11>", dap.step_into)
-            vim.keymap.set("n", "<F7>", dap.step_out)
-            vim.keymap.set("n", "<F6>", dap.step_back)
-            vim.keymap.set("n", "<F2>", dap.restart)
-            vim.keymap.set("n", "<F4>", "<cmd>lua require'dap'.disconnect({ terminateDebuggee = true })<CR><cmd>lua require'dap'.close()<CR>")
+            -- Debugger controls (matching tutorial keybindings)
+            vim.keymap.set("n", "<F5>", dap.continue, { desc = "DAP: Continue/Start" })
+            vim.keymap.set("n", "<F6>", function()
+                -- Debug nearest test (requires neotest-dotnet)
+                local neotest_ok, neotest = pcall(require, "neotest")
+                if neotest_ok then
+                    neotest.run.run({ strategy = "dap" })
+                else
+                    vim.notify("neotest not available", vim.log.levels.WARN)
+                end
+            end, { desc = "DAP: Debug nearest test" })
+            vim.keymap.set("n", "<F8>", dap.step_out, { desc = "DAP: Step out" })
+            vim.keymap.set("n", "<F10>", dap.step_over, { desc = "DAP: Step over" })
+            vim.keymap.set("n", "<F11>", dap.step_into, { desc = "DAP: Step into" })
+            vim.keymap.set("n", "<F2>", dap.restart, { desc = "DAP: Restart" })
+            vim.keymap.set("n", "<F4>", "<cmd>lua require'dap'.disconnect({ terminateDebuggee = true })<CR><cmd>lua require'dap'.close()<CR>", { desc = "DAP: Stop and close" })
 
             vim.keymap.set("n", "<leader>de", function()
                 local expr = vim.fn.input("Evaluate Expression: ")

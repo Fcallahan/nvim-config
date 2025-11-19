@@ -20,6 +20,7 @@ return {
                     "typescript",
                     "vim",
                     "c_sharp",
+                    "razor", -- For Razor/Blazor support
                     "markdown",
                     "markdown_inline"
                 },

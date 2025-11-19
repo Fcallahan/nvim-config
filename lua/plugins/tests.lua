@@ -17,6 +17,12 @@ return {
 
         local neotest = require("neotest")
 
+        -- User commands
         vim.api.nvim_create_user_command('TestDebug', function() neotest.run.run({strategy = "dap"}) end, {})
+
+        -- Keymappings (matching tutorial)
+        vim.keymap.set("n", "<leader>dt", function()
+            neotest.run.run({ strategy = "dap" })
+        end, { desc = "Debug nearest test", noremap = true, silent = true })
     end,
 }

@@ -19,7 +19,15 @@ end
 
 return {
 
-    { "williamboman/mason.nvim", config = true },
+    {
+        "williamboman/mason.nvim",
+        opts = {
+            registries = {
+                "github:mason-org/mason-registry",
+                "github:Crashdummyy/mason-registry", -- Custom registry for roslyn/rzls
+            },
+        },
+    },
 
     {
         "williamboman/mason-lspconfig.nvim",
@@ -54,33 +62,33 @@ return {
                 capabilities = capabilities,
             })
 
-            -- csharp_ls LSP Configuration (Better WSL compatibility)
-            vim.lsp.config.csharp_ls = {
-                on_attach = on_attach,
-                capabilities = capabilities,
-
-                -- Root directory detection
-                root_dir = vim.fs.root(0, {
-                    "*.sln",
-                    "*.csproj",
-                    "*.fsproj",
-                    ".git",
-                }),
-
-                -- File types
-                filetypes = { "cs" },
-
-                -- Custom handlers with better error handling
-                handlers = {
-                    ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = 'rounded' }),
-                    ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = 'rounded' }),
-                },
-
-                -- Initialize options
-                cmd_env = {
-                    DOTNET_ROOT = vim.fn.expand("~/.dotnet")
-                },
-            }
+            -- csharp_ls LSP Configuration (DISABLED - Using roslyn.nvim instead)
+            -- vim.lsp.config.csharp_ls = {
+            --     on_attach = on_attach,
+            --     capabilities = capabilities,
+            --
+            --     -- Root directory detection
+            --     root_dir = vim.fs.root(0, {
+            --         "*.sln",
+            --         "*.csproj",
+            --         "*.fsproj",
+            --         ".git",
+            --     }),
+            --
+            --     -- File types
+            --     filetypes = { "cs" },
+            --
+            --     -- Custom handlers with better error handling
+            --     handlers = {
+            --         ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = 'rounded' }),
+            --         ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = 'rounded' }),
+            --     },
+            --
+            --     -- Initialize options
+            --     cmd_env = {
+            --         DOTNET_ROOT = vim.fn.expand("~/.dotnet")
+            --     },
+            -- }
 
             -- Configure lua_ls
             vim.lsp.config.lua_ls = {
@@ -131,7 +139,7 @@ return {
 
             require("mason-lspconfig").setup {
                 ensure_installed = {
-                    "csharp_ls",  -- Using csharp-ls for better WSL compatibility
+                    -- "csharp_ls",  -- DISABLED - Using roslyn.nvim instead
                     "cssls",
                     "docker_compose_language_service",
                     "dockerls",
