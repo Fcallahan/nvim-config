@@ -214,6 +214,24 @@ return {
             vim.keymap.set("n", "<F2>", dap.restart, { desc = "DAP: Restart" })
             vim.keymap.set("n", "<F4>", "<cmd>lua require'dap'.disconnect({ terminateDebuggee = true })<CR><cmd>lua require'dap'.close()<CR>", { desc = "DAP: Stop and close" })
 
+            -- Alternative keybindings (for terminals that intercept F-keys)
+            vim.keymap.set("n", "<leader>dc", dap.continue, { desc = "[D]ebug: [C]ontinue/Start" })
+            vim.keymap.set("n", "<leader>dv", dap.step_over, { desc = "[D]ebug: Step o[V]er" })
+            vim.keymap.set("n", "<leader>di", dap.step_into, { desc = "[D]ebug: Step [I]nto" })
+            vim.keymap.set("n", "<leader>do", dap.step_out, { desc = "[D]ebug: Step [O]ut" })
+            vim.keymap.set("n", "<leader>db", dap.toggle_breakpoint, { desc = "[D]ebug: Toggle [B]reakpoint" })
+            vim.keymap.set("n", "<leader>dB", function()
+                local condition = vim.fn.input("Breakpoint Condition: ")
+                if condition and condition ~= "" then
+                    dap.set_breakpoint(condition)
+                end
+            end, { desc = "[D]ebug: Conditional [B]reakpoint" })
+            vim.keymap.set("n", "<leader>dr", dap.restart, { desc = "[D]ebug: [R]estart" })
+            vim.keymap.set("n", "<leader>dx", function()
+                dap.disconnect({ terminateDebuggee = true })
+                dap.close()
+            end, { desc = "[D]ebug: Stop/e[X]it" })
+
             vim.keymap.set("n", "<leader>de", function()
                 local expr = vim.fn.input("Evaluate Expression: ")
                 if expr then
