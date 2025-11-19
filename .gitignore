@@ -1,0 +1,30 @@
+# Lazy.nvim plugin manager
+lazy-lock.json
+
+# LSP workspace config
+.luarc.json
+
+# Neovim runtime files
+plugin/
+
+# Undo history
+.*.un~
+*.swp
+*.swo
+
+# Log files
+*.log
+
+# Compiled bytecode
+*.luac
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Session files
+Session.vim
+.session
+
+# Temporary files
+*~

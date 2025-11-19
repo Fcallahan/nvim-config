@@ -1,0 +1,31 @@
+-- Alternative C# LSP server - use this if roslyn continues to have issues
+-- To use this: rename this file to replace roslyn.lua 
+-- Install with: dotnet tool install -g csharp-ls
+
+return {
+    {
+        "neovim/nvim-lspconfig",
+        ft = "cs",
+        config = function()
+            require('lspconfig').csharp_ls.setup({
+                on_attach = function(client, bufnr)
+                    -- Same keymaps as roslyn config
+                    local function map(mode, lhs, rhs, desc)
+                        vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, desc = desc })
+                    end
+                    
+                    -- LSP keymaps
+                    map("n", 'gd', function() Snacks.picker.lsp_definitions() end, '[G]oto [D]efinition')
+                    map("n", "gr", function() Snacks.picker.lsp_references() end, "LSP: [G]oto [R]eferences")
+                    map("n", "gi", function() Snacks.picker.lsp_implementations() end, "[G]o to [I]mplementations")
+                    map("n", "<leader>ds", function() Snacks.picker.lsp_symbols() end, "[D]ocument [S]ymbols")
+                    map("n", "<leader>ws", function() Snacks.picker.lsp_workspace_symbols() end, "[W]orkspace [S]ymbols")
+                    map("n", "<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
+                    map("n", "<leader>ca", vim.lsp.buf.code_action, "[C]ode [A]ction")
+                    map("n", "K", vim.lsp.buf.hover, "Hover Documentation")
+                end,
+                capabilities = require('blink-cmp').get_lsp_capabilities and require('blink-cmp').get_lsp_capabilities() or vim.lsp.protocol.make_client_capabilities(),
+            })
+        end
+    }
+}

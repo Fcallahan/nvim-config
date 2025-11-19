@@ -1,0 +1,127 @@
+return {
+    "seblyng/roslyn.nvim",
+    ft = "cs",
+    dependencies = {
+        "nvim-lua/plenary.nvim",
+    },
+    opts = {
+        -- Your roslyn configuration here
+        -- Disable file watching on WSL due to performance issues
+        filewatching = "off",
+        -- Search for solution files in child directories
+        broad_search = true,
+        -- Lock solution target after first attach
+        lock_target = true,
+        -- Silent initialization
+        silent = false,
+        -- WSL-specific configs
+        config = {
+            handlers = {
+                -- Reduce diagnostic noise by filtering server messages
+                ["window/showMessage"] = function(_, result, ctx)
+                    if result.message:match("No symbol found") then
+                        return
+                    end
+                    vim.lsp.handlers["window/showMessage"](_, result, ctx)
+                end,
+            }
+        }
+    },
+    config = function(_, opts)
+        require("roslyn").setup(opts)
+        
+        -- Configure LSP settings for Roslyn
+        vim.lsp.config("roslyn", {
+            on_attach = function(client, bufnr)
+                -- Filter out noisy diagnostics
+                vim.diagnostic.config({
+                    severity_sort = true,
+                    underline = {
+                        severity = { min = vim.diagnostic.severity.WARN }
+                    },
+                    virtual_text = {
+                        severity = { min = vim.diagnostic.severity.WARN },
+                        format = function(diagnostic)
+                            -- Filter out "No symbol found" errors
+                            if diagnostic.message:match("No symbol found") then
+                                return nil
+                            end
+                            return diagnostic.message
+                        end
+                    },
+                    signs = {
+                        severity = { min = vim.diagnostic.severity.INFO }
+                    }
+                }, bufnr)
+                
+                -- Use the same on_attach as other LSPs
+                local function map(mode, lhs, rhs, desc)
+                    vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, desc = desc })
+                end
+                
+                -- Keymaps
+                map("n", 'gd', function() Snacks.picker.lsp_definitions() end, '[G]oto [D]efinition')
+                map("n", "gr", function() Snacks.picker.lsp_references() end, "LSP: [G]oto [R]eferences")
+                map("n", "gi", function() Snacks.picker.lsp_implementations() end, "[G]o to [I]mplementations")
+                map("n", "<leader>ds", function() Snacks.picker.lsp_symbols() end, "[D]ocument [S]ymbols")
+                map("n", "<leader>ws", function() Snacks.picker.lsp_workspace_symbols() end, "[W]orkspace [S]ymbols")
+                map("n", "<leader>cl", function() vim.lsp.codelens.refresh() end, "[C]ode [L]ens")
+                map("n", "<leader>ih", function() vim.lsp.inlay_hint.enable() end, "[I]nlay [H]ints")
+                map("n", "<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
+                map("n", "<leader>ca", vim.lsp.buf.code_action, "[C]ode [A]ction")
+                map("n", "K", vim.lsp.buf.hover, "Hover Documentation")
+                map("n", "<leader>k", vim.diagnostic.open_float, "Float Documentation")
+                map("n", "<leader>K", vim.lsp.buf.signature_help, "Signature Help")
+                map("i", "<c-k>", vim.lsp.buf.signature_help, "Signature Help")
+                
+                -- LSP restart keymaps for when diagnostics flood
+                map("n", "<leader>lr", function() 
+                    vim.cmd("LspRestart roslyn")
+                    vim.notify("Restarted Roslyn LSP")
+                end, "[L]SP [R]estart")
+                map("n", "<leader>ld", function()
+                    vim.diagnostic.reset()
+                    vim.notify("Cleared diagnostics")
+                end, "[L]SP Clear [D]iagnostics")
+            end,
+            capabilities = vim.tbl_deep_extend(
+                "force",
+                vim.lsp.protocol.make_client_capabilities(),
+                require('blink-cmp').get_lsp_capabilities and require('blink-cmp').get_lsp_capabilities() or {}
+            ),
+            cmd = {
+                "dotnet",
+                vim.fn.expand("~/.local/share/nvim/roslyn/content/LanguageServer/linux-x64/Microsoft.CodeAnalysis.LanguageServer.dll"),
+                "--logLevel", "Information", 
+                "--extensionLogDirectory", vim.fs.joinpath(vim.uv.os_tmpdir(), "roslyn_ls/logs"),
+                "--stdio"
+            },
+            init_options = {
+                hostPid = vim.fn.getpid(),
+            },
+            settings = {
+                ["csharp|inlay_hints"] = {
+                    csharp_enable_inlay_hints_for_implicit_object_creation = true,
+                    csharp_enable_inlay_hints_for_implicit_variable_types = true,
+                    csharp_enable_inlay_hints_for_lambda_parameter_types = true,
+                    csharp_enable_inlay_hints_for_types = true,
+                },
+                ["csharp|code_lens"] = {
+                    dotnet_enable_references_code_lens = true,
+                    dotnet_enable_tests_code_lens = true,
+                },
+                ["csharp|completion"] = {
+                    dotnet_provide_regex_completions = true,
+                    dotnet_show_completion_items_from_unimported_namespaces = true,
+                    dotnet_show_name_completion_suggestions = true,
+                },
+                ["csharp|background_analysis"] = {
+                    background_analysis = {
+                        dotnet_analyzer_diagnostics_scope = "fullSolution",
+                        dotnet_compiler_diagnostics_scope = "fullSolution",
+                    }
+                },
+            },
+        })
+    end,
+}
