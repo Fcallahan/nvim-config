@@ -11,7 +11,14 @@ return {
     config = function()
         require("neotest").setup({
             adapters = {
-                require("neotest-dotnet")
+                require("neotest-dotnet")({
+                    -- Force Debug builds for better debugging experience
+                    discovery_root = "solution",
+                    -- Ensure Debug configuration
+                    dotnet_additional_args = {
+                        "-c Debug"
+                    }
+                })
             }
         })
 

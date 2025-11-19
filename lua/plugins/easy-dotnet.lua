@@ -14,6 +14,9 @@ return {
 				enabled = false, -- Keep your existing csharp_ls LSP
 			},
 
+			-- Build configuration - ALWAYS use Debug for better debugging
+			build_config = "Debug",
+
 			-- Diagnostics configuration - show only build errors
 			diagnostics = {
 				default_severity = "error", -- Show only errors, not warnings
@@ -57,6 +60,13 @@ return {
 			vim.cmd("write") -- Save current buffer
 			require("easy-dotnet").build_default() -- Build with terminal output
 		end, { desc = "Write and build with terminal output" })
+
+		-- WRITE AND DEBUG BUILD (explicitly builds Debug configuration)
+		vim.api.nvim_create_user_command("Wd", function()
+			vim.cmd("write") -- Save current buffer
+			-- Build Debug configuration explicitly (better for debugging)
+			vim.cmd("Dotnet build default")
+		end, { desc = "Write and build Debug (for debugging)" })
 
 		-- KEYBINDINGS (following <leader>c pattern for code actions)
 		local keymap = vim.keymap.set
