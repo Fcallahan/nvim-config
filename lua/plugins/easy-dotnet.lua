@@ -58,12 +58,12 @@ return {
 			require("easy-dotnet").build_default() -- Build with terminal output
 		end, { desc = "Write and build with terminal output" })
 
-		-- WRITE AND DEBUG BUILD (explicitly builds Debug configuration)
+		-- WRITE AND DEBUG BUILD (builds entire solution for debugging)
 		vim.api.nvim_create_user_command("Wd", function()
 			vim.cmd("write") -- Save current buffer
-			-- Build Debug configuration explicitly (better for debugging)
-			vim.cmd("Dotnet build default")
-		end, { desc = "Write and build Debug (for debugging)" })
+			-- Build entire solution (more reliable than build default)
+			vim.cmd("Dotnet build solution")
+		end, { desc = "Write and build solution (for debugging)" })
 
 		-- KEYBINDINGS (following <leader>c pattern for code actions)
 		local keymap = vim.keymap.set
