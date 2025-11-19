@@ -44,10 +44,12 @@ return {
 		vim.api.nvim_create_autocmd("BufWritePost", {
 			pattern = "*.cs",
 			callback = function()
-				-- Use quickfix variant for silent background builds
-				require("easy-dotnet").build_default_quickfix()
+				-- Schedule to avoid blocking and build entire solution (no picker needed)
+				vim.schedule(function()
+					require("easy-dotnet").build_solution_quickfix()
+				end)
 			end,
-			desc = "Auto-build C# project silently on save",
+			desc = "Auto-build C# solution silently on save",
 		})
 
 		-- CUSTOM WRITE-AND-BUILD COMMAND (for when you want to see build output)
