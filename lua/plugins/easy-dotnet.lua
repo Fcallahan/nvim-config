@@ -14,9 +14,6 @@ return {
 				enabled = false, -- Keep your existing csharp_ls LSP
 			},
 
-			-- Build configuration - ALWAYS use Debug for better debugging
-			build_config = "Debug",
-
 			-- Diagnostics configuration - show only build errors
 			diagnostics = {
 				default_severity = "error", -- Show only errors, not warnings
