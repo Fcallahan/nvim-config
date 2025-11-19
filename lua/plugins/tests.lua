@@ -12,15 +12,11 @@ return {
         require("neotest").setup({
             adapters = {
                 require("neotest-vstest")({
-                    -- DAP configuration for debugging (correct structure)
+                    -- DAP configuration for debugging
                     dap_settings = {
                         type = "netcoredbg",
                     },
-
-                    -- Force Debug builds for better debugging experience
-                    build_opts = {
-                        additional_args = { "-c", "Debug" }
-                    },
+                    -- Note: Debug builds are used by default, no need for build_opts
                 }),
             },
         })
