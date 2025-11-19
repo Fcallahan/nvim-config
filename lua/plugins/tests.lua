@@ -12,16 +12,14 @@ return {
         require("neotest").setup({
             adapters = {
                 require("neotest-vstest")({
-                    -- Use project-based discovery for better reliability
-                    discovery_root = "project",
+                    -- DAP configuration for debugging (correct structure)
+                    dap_settings = {
+                        type = "netcoredbg",
+                    },
 
                     -- Force Debug builds for better debugging experience
-                    extra_args = { "-c", "Debug" },
-
-                    -- DAP strategy configuration for netcoredbg
-                    dap = {
-                        adapter_name = "netcoredbg",
-                        args = { justMyCode = false },
+                    build_opts = {
+                        additional_args = { "-c", "Debug" }
                     },
                 }),
             },
