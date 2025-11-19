@@ -20,22 +20,10 @@ return {
 				setqflist = false, -- Use diagnostic API instead of quickfix
 			},
 
-			-- Debugger configuration - auto DLL detection and DAP integration
-			debugger = {
-				bin_path = vim.fn.stdpath("data") .. "/mason/packages/netcoredbg/netcoredbg",
-				auto_register_dap = true, -- Auto-register DAP configurations
-			},
-
-			-- Test runner settings with debugging support
+			-- Test runner settings (basic features only, debugging handled by neotest-vstest)
 			test_runner = {
 				viewmode = "float", -- Options: "split", "vsplit", "float", "buf"
-				noBuild = false, -- Auto-build before testing for debugging
-				enable_buffer_test_execution = true, -- Enable running tests from buffer
-				mappings = {
-					run_test_from_buffer = { lhs = "<leader>r", desc = "Run test under cursor" },
-					debug_test = { lhs = "<leader>dt", desc = "Debug test under cursor" },
-					run_all_tests = { lhs = "<leader>ta", desc = "Run all tests" },
-				},
+				noBuild = true, -- Skip build (neotest-vstest handles builds)
 			},
 
 			-- Picker integration (using telescope)
@@ -51,9 +39,6 @@ return {
 				type = "file_scoped", -- Modern C# style
 			},
 		})
-
-		-- Register DAP variables viewer for better debugging experience
-		require("easy-dotnet.netcoredbg").register_dap_variables_viewer()
 
 		-- SILENT AUTO-BUILD ON SAVE (no buffer opens unless there are errors)
 		vim.api.nvim_create_autocmd("BufWritePost", {
