@@ -15,6 +15,7 @@ return {
                     -- DAP configuration for debugging
                     dap_settings = {
                         type = "netcoredbg",
+                        justMyCode = false,  -- Allow debugging with fewer symbols, prevents "release build" warnings
                     },
                     -- Note: Debug builds are used by default, no need for build_opts
                 }),

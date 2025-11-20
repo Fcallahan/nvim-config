@@ -4,6 +4,7 @@ return {
         dependencies = {
             "rcarriga/nvim-dap-ui",
             "theHamsta/nvim-dap-virtual-text",
+            "nvim-telescope/telescope-dap.nvim",
             "nvim-neotest/nvim-nio",
             "williamboman/mason.nvim"
         },
@@ -13,7 +14,90 @@ return {
             local dotnet_helper = require("dotnet-tools.helpers")
             local ui = require("dapui")
 
-            require("dapui").setup()
+            -- Enhanced dapui layout with better organization
+            ui.setup({
+                icons = { expanded = "▾", collapsed = "▸", current_frame = "▸" },
+                mappings = {
+                    edit = "e",
+                    expand = { "<CR>", "<2-LeftMouse>" },
+                    open = "o",
+                    remove = "d",
+                    repl = "r",
+                    toggle = "t",
+                },
+                expand_lines = true,
+                layouts = {
+                    {
+                        elements = {
+                            { id = "scopes", size = 0.35 },      -- Variable scopes
+                            { id = "breakpoints", size = 0.15 }, -- Breakpoints list
+                            { id = "stacks", size = 0.25 },      -- Call stack
+                            { id = "watches", size = 0.25 },     -- Watch expressions
+                        },
+                        size = 40,
+                        position = "left",
+                    },
+                    {
+                        elements = {
+                            { id = "repl", size = 0.5 },     -- REPL for executing code
+                            { id = "console", size = 0.5 },  -- Program output
+                        },
+                        size = 10,
+                        position = "bottom",
+                    },
+                },
+                controls = {
+                    enabled = true,
+                    element = "repl",
+                },
+                floating = {
+                    max_width = 0.9,
+                    max_height = 0.5,
+                    border = "rounded",
+                    mappings = {
+                        close = { "q", "<Esc>" },
+                    },
+                },
+                windows = { indent = 2 },
+            })
+
+            -- Enable inline variable viewing with nvim-dap-virtual-text
+            require("nvim-dap-virtual-text").setup({
+                enabled = true,
+                enabled_commands = true,
+                highlight_changed_variables = true,
+                highlight_new_as_changed = false,
+                show_stop_reason = true,
+                commented = false,
+                only_first_definition = true,
+                all_references = false,
+                clear_on_continue = false,
+                virt_text_pos = vim.fn.has('nvim-0.10') == 1 and 'inline' or 'eol',
+            })
+
+            -- Custom highlight groups for better visibility (Catppuccin-friendly)
+            vim.api.nvim_set_hl(0, 'DapStopped', {
+                fg = '#a6e3a1',  -- Catppuccin green
+                bg = '#45475a',  -- Catppuccin dark gray
+                bold = true,
+            })
+            vim.api.nvim_set_hl(0, 'DapBreakpoint', { fg = '#f38ba8' })
+            vim.api.nvim_set_hl(0, 'NvimDapVirtualText', { fg = '#888888', italic = true })
+            vim.api.nvim_set_hl(0, 'NvimDapVirtualTextChanged', { fg = '#ff9900', italic = true })
+
+            -- Sign definitions with better symbols
+            vim.fn.sign_define('DapBreakpoint', {
+                text = '●',
+                texthl = 'DapBreakpoint',
+                linehl = '',
+                numhl = 'DapBreakpoint'
+            })
+            vim.fn.sign_define('DapStopped', {
+                text = '▶',
+                texthl = 'DapStopped',
+                linehl = 'DapStopped',  -- Highlights entire current line
+                numhl = 'DapStopped'
+            })
 
             -- Helper function to find solution directory
             local find_solution = function()
@@ -242,7 +326,34 @@ return {
             -- Eval var under cursor
             vim.keymap.set("n", "<space>?", function()
                 require("dapui").eval(nil, { enter = true })
+            end, { desc = "DAP: Evaluate variable under cursor" })
+
+            -- Evaluate selection in visual mode
+            vim.keymap.set("v", "<space>?", function()
+                require("dapui").eval()
+            end, { desc = "DAP: Evaluate selection" })
+
+            -- Toggle UI panels
+            vim.keymap.set("n", "<leader>dS", function()
+                require("dapui").toggle({ layout = 1 })
+            end, { desc = "[D]ebug: Toggle [S]copes sidebar" })
+
+            vim.keymap.set("n", "<leader>dC", function()
+                require("dapui").toggle({ layout = 2 })
+            end, { desc = "[D]ebug: Toggle [C]onsole" })
+
+            -- Telescope DAP integration for searching variables
+            pcall(function()
+                require("telescope").load_extension("dap")
             end)
+
+            vim.keymap.set("n", "<leader>dvar", function()
+                require("telescope").extensions.dap.variables()
+            end, { desc = "[D]ebug: Search [VAR]iables" })
+
+            vim.keymap.set("n", "<leader>dfr", function()
+                require("telescope").extensions.dap.frames()
+            end, { desc = "[D]ebug: Jump [FR]ames" })
 
             dap.listeners.before.attach.dapui_config = function()
                 ui.open()
