@@ -40,7 +40,12 @@ return {
             }
         },
         sources = {
-            default = { 'lsp', 'path', 'snippets', 'buffer', 'dadbod', 'avante'},
+            default = { 'lsp', 'path', 'snippets', 'buffer', 'avante'},
+            per_filetype = {
+                sql = { 'dadbod', 'snippets', 'buffer' },
+                mysql = { 'dadbod', 'snippets', 'buffer' },
+                plsql = { 'dadbod', 'snippets', 'buffer' },
+            },
             providers = {
                 avante = { name = 'Avante',  module = 'blink-cmp-avante' },
                 dadbod = { name = "Dadbod", module = "vim_dadbod_completion.blink" },

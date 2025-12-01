@@ -40,18 +40,6 @@ return {
 			},
 		})
 
-		-- SILENT AUTO-BUILD ON SAVE (no buffer opens unless there are errors)
-		vim.api.nvim_create_autocmd("BufWritePost", {
-			pattern = "*.cs",
-			callback = function()
-				-- Schedule to avoid blocking and build entire solution (no picker needed)
-				vim.schedule(function()
-					require("easy-dotnet").build_solution_quickfix()
-				end)
-			end,
-			desc = "Auto-build C# solution silently on save",
-		})
-
 		-- CUSTOM WRITE-AND-BUILD COMMAND (for when you want to see build output)
 		vim.api.nvim_create_user_command("Wb", function()
 			vim.cmd("write") -- Save current buffer

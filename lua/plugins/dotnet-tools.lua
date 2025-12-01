@@ -1,32 +1,43 @@
 return {
-    "dotnet-tools",
-    dir = "~/.config/nvim/lua/tuliopaim/dotnet-tools",
-    event = "VeryLazy",
-    keys = {
-        {
-            "<leader>rt",
-            ":Test<CR>",
-            desc="Run test at cursor"
-        },
-        {
-            "<leader>rc",
-            ":TestClass<CR>",
-            desc="Run test class"
-        },
-        {
-            "<leader>rl",
-            function()
-                require("dotnet-tools.launcher").show_launcher()
-            end,
-            desc="Run/Debug Launcher (BR)"
-        },
-    },
-    config = function()
-        require("dotnet-tools").setup({
-            script_path = "/home/tuliopaim/.nix-profile/bin/rider"
-        })
-
-        -- Setup the launcher module
-        require("dotnet-tools.launcher").setup()
-    end
+	{
+        "tuliopaim/dotnet-tools.nvim",
+		dependencies = {
+			"mfussenegger/nvim-dap",
+			"nvim-treesitter/nvim-treesitter",
+			"nvim-lua/plenary.nvim",
+		},
+		event = "VeryLazy",
+		keys = {
+			{
+				"<leader>rt",
+				":DotnetTest<CR>",
+				desc = "Run test at cursor",
+			},
+			{
+				"<leader>rc",
+				":DotnetTestClass<CR>",
+				desc = "Run test class",
+			},
+			{
+				"<leader>dd",
+				":DotnetDebug<CR>",
+				desc = "Start .NET debugging",
+			},
+			{
+				"<leader>ds",
+				":UserSecrets<CR>",
+				desc = "Open user secrets",
+			},
+			{
+				"<leader>dr",
+				":OpenInRider<CR>",
+				desc = "Open in Rider",
+			},
+		},
+		config = function()
+			require("dotnet-tools").setup({
+				rider_path = "/Applications/Rider.app/Contents/MacOS/rider",
+			})
+		end,
+	}
 }

@@ -5,10 +5,14 @@ return {
   opts = {
     image = { enabled = false },
     bigfile = { enabled = true },
-    lazygit = { 
+    lazygit = {
       enabled = true,
       -- Use WSL wrapper if in WSL environment
       cmd = os.getenv("WSL_DISTRO_NAME") and "lazygit-wsl" or "lazygit",
+      win = {
+        width = 0.95,
+        height = 0.95,
+      },
     },
     git = { enabled = true },
     gitbrowse = { enabled = true },

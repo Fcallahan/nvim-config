@@ -20,6 +20,16 @@ return {
             vim.g.db_ui_use_nvim_notify = 0  -- Disabled to prevent conflicts with Snacks notifier
             vim.g.db_ui_win_position = "left"
             vim.g.db_ui_execute_on_save = 0
+
+            -- Completion settings
+            vim.g.vim_dadbod_completion_mark = '[DB]'  -- Visual indicator for DB completions
+
+            -- Limit completion results for better performance with large schemas
+            vim.g.vim_dadbod_completion_source_limits = {
+                tables = 100,   -- Max 100 table suggestions
+                schemas = 50,   -- Max 50 schema suggestions
+                columns = 200   -- Max 200 column suggestions
+            }
         end,
         config = function()
             -- Function to view DBUI connections
@@ -97,6 +107,12 @@ return {
                 local connections_file = vim.fn.expand("~/.local/share/db_ui/connections.json")
                 vim.cmd("edit " .. connections_file)
             end, { desc = "Open DBUI connections.json" })
+
+            -- Keymap to refresh DB completion cache (fixes stale completions!)
+            vim.keymap.set("n", "<leader>dr", function()
+                vim.cmd("DBCompletionClearCache")
+                vim.notify("Database schema cache refreshed!", vim.log.levels.INFO)
+            end, { desc = "Refresh DB completion cache" })
 
             -- Define highlight setter functions
             local function set_dbui_highlights()

@@ -37,5 +37,18 @@ return {
         vim.keymap.set("n", "<leader>tf", function()
             neotest.run.run(vim.fn.expand("%"))
         end, { desc = "Run all tests in file", noremap = true, silent = true })
+
+        -- Test Explorer UI
+        vim.keymap.set("n", "<leader>te", function()
+            neotest.summary.toggle()
+        end, { desc = "Toggle test explorer", noremap = true, silent = true })
+
+        vim.keymap.set("n", "<leader>to", function()
+            neotest.output_panel.toggle()
+        end, { desc = "Toggle test output panel", noremap = true, silent = true })
+
+        vim.keymap.set("n", "<leader>tS", function()
+            neotest.run.stop()
+        end, { desc = "Stop running tests", noremap = true, silent = true })
     end,
 }

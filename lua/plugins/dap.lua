@@ -131,129 +131,6 @@ return {
                 return vim.fn.input('Path to dll: ', sln_dir .. '/bin/Debug/net9.0/', 'file')
             end
 
-            local config = {
-                -- EMServices Billing Rules - Web API (Development)
-                {
-                    type = "coreclr",
-                    name = "BR: Web API - Development",
-                    request = "launch",
-                    program = function()
-                        if vim.fn.confirm('Should I recompile first?', '&yes\n&no', 2) == 1 then
-                            dotnet_helper.build_project()
-                        end
-                        return get_br_dll("EMServices.BillingRules")
-                    end,
-                    cwd = function()
-                        local sln_dir = find_solution()
-                        if sln_dir then
-                            return sln_dir .. "/src/EMServices.BillingRules"
-                        end
-                        return vim.fn.getcwd()
-                    end,
-                    env = {
-                        ASPNETCORE_ENVIRONMENT = "Development"
-                    },
-                    stopAtEntry = false,
-                },
-                -- EMServices Billing Rules - Web API (DevRemote)
-                {
-                    type = "coreclr",
-                    name = "BR: Web API - DevRemote",
-                    request = "launch",
-                    program = function()
-                        if vim.fn.confirm('Should I recompile first?', '&yes\n&no', 2) == 1 then
-                            dotnet_helper.build_project()
-                        end
-                        return get_br_dll("EMServices.BillingRules")
-                    end,
-                    cwd = function()
-                        local sln_dir = find_solution()
-                        if sln_dir then
-                            return sln_dir .. "/src/EMServices.BillingRules"
-                        end
-                        return vim.fn.getcwd()
-                    end,
-                    env = {
-                        ASPNETCORE_ENVIRONMENT = "DevRemote"
-                    },
-                    stopAtEntry = false,
-                },
-                -- EMServices Billing Rules - Worker Service
-                {
-                    type = "coreclr",
-                    name = "BR: Worker Service",
-                    request = "launch",
-                    program = function()
-                        if vim.fn.confirm('Should I recompile first?', '&yes\n&no', 2) == 1 then
-                            dotnet_helper.build_project()
-                        end
-                        return get_br_dll("Emservices.WorkerApp")
-                    end,
-                    cwd = function()
-                        local sln_dir = find_solution()
-                        if sln_dir then
-                            return sln_dir .. "/src/Emservices.WorkerApp"
-                        end
-                        return vim.fn.getcwd()
-                    end,
-                    env = {
-                        DOTNET_ENVIRONMENT = "Development"
-                    },
-                    stopAtEntry = false,
-                },
-                -- Generic Console Application (fallback for other projects)
-                {
-                    type = "coreclr",
-                    name = "Launch Console in Development",
-                    request = "launch",
-                    program = function()
-
-                        if vim.fn.confirm('Should I recompile first?', '&yes\n&no', 2) == 1 then
-                            dotnet_helper.build_project()
-                        end
-
-                        return dotnet_helper.get_dll_path()
-                    end,
-                    env = {
-                        DOTNET_ENVIRONMENT = "Development"
-                    }
-                },
-                {
-                    type = "coreclr",
-                    name = "Launch WEB in Development",
-                    request = "launch",
-                    program = function()
-                        if vim.fn.confirm('Should I recompile first?', '&yes\n&no', 2) == 1 then
-                            vim.g.dotnet_build_project()
-                        end
-
-                        return dotnet_helper.get_dll_path()
-                    end,
-                    env = {
-                        ASPNETCORE_ENVIRONMENT = "Development"
-                    }
-                },
-                {
-                    type = "coreclr",
-                    name = "Attach",
-                    request = "attach",
-                    processId = dap_utils.pick_process,
-                },
-
-                {
-                    type = "coreclr",
-                    name = "Attach (Smart)",
-                    request = "attach",
-                    processId = function()
-                        local current_working_dir = vim.fn.getcwd()
-                        return dotnet_helper.dap_smart_pick_process(dap_utils, current_working_dir) or dap.ABORT
-                    end,
-                },
-            }
-
-            dap.configurations.cs = config
-            dap.configurations.fsharp = config
-
             -- Use Mason-installed netcoredbg
             local mason_path = vim.fn.stdpath("data") .. "/mason/packages/netcoredbg/netcoredbg"
 
@@ -316,6 +193,26 @@ return {
                 dap.close()
             end, { desc = "[D]ebug: Stop/e[X]it" })
 
+            -- Nuclear cleanup - forcefully terminate everything
+            vim.keymap.set("n", "<leader>dX", function()
+                require('dap').terminate()
+                require('dap').disconnect({ terminateDebuggee = true })
+                require('dap').close()
+                require('dapui').close()
+                require('nvim-dap-virtual-text').refresh()
+                vim.notify("DAP session cleaned up", vim.log.levels.INFO)
+            end, { desc = "[D]ebug: Force cleanup (nuclear)" })
+
+            -- User command for easy access
+            vim.api.nvim_create_user_command('DapCleanup', function()
+                require('dap').terminate()
+                require('dap').disconnect({ terminateDebuggee = true })
+                require('dap').close()
+                require('dapui').close()
+                require('nvim-dap-virtual-text').refresh()
+                vim.notify("DAP session cleaned up", vim.log.levels.INFO)
+            end, { desc = "Force cleanup all DAP connections" })
+
             vim.keymap.set("n", "<leader>de", function()
                 local expr = vim.fn.input("Evaluate Expression: ")
                 if expr then
@@ -355,6 +252,7 @@ return {
                 require("telescope").extensions.dap.frames()
             end, { desc = "[D]ebug: Jump [FR]ames" })
 
+            -- Quick debug with launchSettings.json
             dap.listeners.before.attach.dapui_config = function()
                 ui.open()
             end

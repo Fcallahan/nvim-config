@@ -121,7 +121,7 @@ vim.keymap.set("n", "<leader>oc", function()
 end, { desc = "[O]pen [C]opilot panel" })
 
 -- Terminal shortcuts (similar to your JetBrains setup)
-vim.keymap.set("n", "<leader>tr", ":split | terminal<CR>", { desc = "[T]erminal [R]un (horizontal)" })
+vim.keymap.set("n", "<leader>th", ":split | terminal<CR>", { desc = "[T]erminal [H]orizontal" })
 vim.keymap.set("n", "<leader>tv", ":vsplit | terminal<CR>", { desc = "[T]erminal [V]ertical" })
 vim.keymap.set("n", "<leader>tt", ":tabnew | terminal<CR>", { desc = "[T]erminal [T]ab" })
 
@@ -199,6 +199,11 @@ vim.api.nvim_create_user_command("TODO", function()
 end, {})
 
 vim.keymap.set("n", "<leader>td", ":TODO<CR>", { desc = "[T]o [D]o" })
+
+-- Custom reference overlay
+vim.keymap.set("n", "<leader>ref", function()
+    require("custom-reference").toggle()
+end, { desc = "Toggle quick reference overlay" })
 
 -- System clipboard integration with Ctrl+C and Ctrl+V
 vim.keymap.set({"n", "v"}, "<C-c>", '"+y', { desc = "Copy to system clipboard" })
