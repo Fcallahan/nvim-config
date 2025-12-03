@@ -27,6 +27,5 @@ return {
   end,
   keys = {
     { "<leader>ch", "<cmd>Cheatsheet<CR>", desc = "Open cheatsheet" },
-    { "<leader>?", "<cmd>CheatsheetEdit<CR>", desc = "Edit cheatsheet" },
   }
 }

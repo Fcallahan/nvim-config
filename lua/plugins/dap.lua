@@ -222,7 +222,11 @@ return {
 
             -- Eval var under cursor
             vim.keymap.set("n", "<space>?", function()
-                require("dapui").eval(nil, { enter = true })
+                local expr = vim.fn.expand("<cexpr>")
+                if expr == "" then
+                    expr = vim.fn.expand("<cword>")
+                end
+                require("dapui").eval(expr, { enter = true })
             end, { desc = "DAP: Evaluate variable under cursor" })
 
             -- Evaluate selection in visual mode

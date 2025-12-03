@@ -66,6 +66,7 @@ local reference_content = {
       { "F8 / <leader>do", "Step out" },
       { "F2 / <leader>dr", "Restart" },
       { "F4 / <leader>dx", "Stop/exit" },
+      { "<leader>dX", "Force kill (nuclear)" },
       { "<space>?", "Eval under cursor" },
       { "<leader>de", "Eval expression" },
       { "<leader>dvar", "Search variables" },
