@@ -14,6 +14,36 @@ return {
             local dotnet_helper = require("dotnet-tools.helpers")
             local ui = require("dapui")
 
+            -- Exception breakpoint state (toggleable)
+            local exception_breakpoints = {
+                enabled = false,
+                filters = {}  -- empty = off, {"all"} = all exceptions, {"user-unhandled"} = unhandled only
+            }
+
+            -- Set exception breakpoints on the current session
+            local function apply_exception_breakpoints()
+                if dap.session() then
+                    dap.set_exception_breakpoints(exception_breakpoints.filters)
+                end
+            end
+
+            -- Toggle exception modes: off -> user-unhandled -> all -> off
+            local function cycle_exception_breakpoints()
+                if #exception_breakpoints.filters == 0 then
+                    exception_breakpoints.filters = { "user-unhandled" }
+                    exception_breakpoints.enabled = true
+                    vim.notify("Exception breakpoints: USER-UNHANDLED", vim.log.levels.INFO)
+                elseif exception_breakpoints.filters[1] == "user-unhandled" then
+                    exception_breakpoints.filters = { "all" }
+                    vim.notify("Exception breakpoints: ALL (first-chance)", vim.log.levels.INFO)
+                else
+                    exception_breakpoints.filters = {}
+                    exception_breakpoints.enabled = false
+                    vim.notify("Exception breakpoints: OFF", vim.log.levels.INFO)
+                end
+                apply_exception_breakpoints()
+            end
+
             -- Enhanced dapui layout with better organization
             ui.setup({
                 icons = { expanded = "▾", collapsed = "▸", current_frame = "▸" },
@@ -187,6 +217,32 @@ return {
                     dap.set_breakpoint(condition)
                 end
             end, { desc = "[D]ebug: Conditional [B]reakpoint" })
+
+            -- Exception breakpoint controls
+            vim.keymap.set("n", "<leader>dE", cycle_exception_breakpoints,
+                { desc = "[D]ebug: Cycle [E]xception breakpoints (off/unhandled/all)" })
+
+            vim.keymap.set("n", "<leader>deu", function()
+                exception_breakpoints.filters = { "user-unhandled" }
+                exception_breakpoints.enabled = true
+                apply_exception_breakpoints()
+                vim.notify("Exception breakpoints: USER-UNHANDLED", vim.log.levels.INFO)
+            end, { desc = "[D]ebug: [E]xception break on [U]nhandled" })
+
+            vim.keymap.set("n", "<leader>dea", function()
+                exception_breakpoints.filters = { "all" }
+                exception_breakpoints.enabled = true
+                apply_exception_breakpoints()
+                vim.notify("Exception breakpoints: ALL", vim.log.levels.INFO)
+            end, { desc = "[D]ebug: [E]xception break on [A]ll" })
+
+            vim.keymap.set("n", "<leader>deo", function()
+                exception_breakpoints.filters = {}
+                exception_breakpoints.enabled = false
+                apply_exception_breakpoints()
+                vim.notify("Exception breakpoints: OFF", vim.log.levels.INFO)
+            end, { desc = "[D]ebug: [E]xception breakpoints [O]ff" })
+
             vim.keymap.set("n", "<leader>dr", dap.restart, { desc = "[D]ebug: [R]estart" })
             vim.keymap.set("n", "<leader>dx", function()
                 dap.disconnect({ terminateDebuggee = true })
@@ -263,7 +319,21 @@ return {
             dap.listeners.before.launch.dapui_config = function()
                 ui.open()
             end
-            dap.listeners.before.event_terminated.dapui_config = function()
+
+            -- Apply exception breakpoints when session initializes
+            dap.listeners.after.event_initialized.exception_breakpoints = function()
+                if exception_breakpoints.enabled then
+                    apply_exception_breakpoints()
+                end
+            end
+
+            dap.listeners.before.event_terminated.dapui_config = function(session, body)
+                -- Check if we stopped due to exception - give time to inspect
+                if body and body.reason == "exception" then
+                    vim.notify("Program terminated with exception - UI staying open", vim.log.levels.WARN)
+                    -- Don't auto-close, let user close manually with <leader>dx
+                    return
+                end
                 ui.close()
             end
             dap.listeners.before.event_exited.dapui_config = function()

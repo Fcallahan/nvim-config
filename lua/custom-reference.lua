@@ -55,11 +55,15 @@ local reference_content = {
   {
     section = "🐛 DEBUGGING",
     priority = 2,
-    tags = {"debug", "dap", "breakpoint", "step", "launch"},
+    tags = {"debug", "dap", "breakpoint", "step", "launch", "exception"},
     items = {
       { "<leader>dd", "Quick debug (launch)" },
       { "F9 / <leader>db", "Toggle breakpoint" },
       { "Shift+F9", "Conditional BP" },
+      { "<leader>dE", "Cycle exception BP" },
+      { "<leader>deu", "Break unhandled" },
+      { "<leader>dea", "Break all except" },
+      { "<leader>deo", "Except BP off" },
       { "F5 / <leader>dc", "Start/Continue" },
       { "F10 / <leader>dv", "Step over" },
       { "F11 / <leader>di", "Step into" },

@@ -24,11 +24,6 @@ return {
 				desc = "Start .NET debugging",
 			},
 			{
-				"<leader>ds",
-				":UserSecrets<CR>",
-				desc = "Open user secrets",
-			},
-			{
 				"<leader>dr",
 				":OpenInRider<CR>",
 				desc = "Open in Rider",
