@@ -44,51 +44,31 @@ return {
                 apply_exception_breakpoints()
             end
 
-            -- Enhanced dapui layout with better organization
+            -- Minimalist dapui layout
             ui.setup({
-                icons = { expanded = "▾", collapsed = "▸", current_frame = "▸" },
-                mappings = {
-                    edit = "e",
-                    expand = { "<CR>", "<2-LeftMouse>" },
-                    open = "o",
-                    remove = "d",
-                    repl = "r",
-                    toggle = "t",
-                },
                 expand_lines = true,
+                controls = { enabled = false },
+                floating = { border = "rounded" },
+                render = {
+                    max_type_length = 60,
+                    max_value_lines = 200,
+                },
                 layouts = {
                     {
                         elements = {
-                            { id = "scopes", size = 0.35 },      -- Variable scopes
-                            { id = "breakpoints", size = 0.15 }, -- Breakpoints list
-                            { id = "stacks", size = 0.25 },      -- Call stack
-                            { id = "watches", size = 0.25 },     -- Watch expressions
+                            { id = "repl", size = 1.0 },
                         },
-                        size = 40,
-                        position = "left",
+                        size = 15,
+                        position = "bottom",
                     },
                     {
                         elements = {
-                            { id = "repl", size = 0.5 },     -- REPL for executing code
-                            { id = "console", size = 0.5 },  -- Program output
+                            { id = "scopes", size = 1.0 },
                         },
-                        size = 10,
-                        position = "bottom",
+                        size = 70,
+                        position = "right",
                     },
                 },
-                controls = {
-                    enabled = true,
-                    element = "repl",
-                },
-                floating = {
-                    max_width = 0.9,
-                    max_height = 0.5,
-                    border = "rounded",
-                    mappings = {
-                        close = { "q", "<Esc>" },
-                    },
-                },
-                windows = { indent = 2 },
             })
 
             -- Enable inline variable viewing with nvim-dap-virtual-text

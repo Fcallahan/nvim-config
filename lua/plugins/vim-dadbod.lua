@@ -103,7 +103,7 @@ return {
             })
 
             -- Keymap to open connections.json
-            vim.keymap.set("n", "<leader>dc", function()
+            vim.keymap.set("n", "<leader>dC", function()
                 local connections_file = vim.fn.expand("~/.local/share/db_ui/connections.json")
                 vim.cmd("edit " .. connections_file)
             end, { desc = "Open DBUI connections.json" })
