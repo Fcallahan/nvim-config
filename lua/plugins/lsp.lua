@@ -39,6 +39,9 @@ return {
             "folke/snacks.nvim"
         },
         config = function()
+            -- Disable inlay hints globally to prevent crashes from invalid column positions
+            vim.lsp.inlay_hint.enable(false)
+
             vim.diagnostic.config({
                 virtual_text = true,
                 severity_sort = true,
@@ -55,6 +58,11 @@ return {
                 vim.lsp.protocol.make_client_capabilities(),
                 require('blink-cmp').get_lsp_capabilities()
             )
+
+            -- Disable inlay hints in capabilities to prevent LSP servers from sending them
+            capabilities.textDocument.inlayHint = {
+                dynamicRegistration = false,
+            }
 
             -- Set default configuration for all servers
             vim.lsp.config('*', {
@@ -115,6 +123,31 @@ return {
                     },
                 },
             }
+
+            -- Configure custom postgres-lsp (NOT the built-in postgres_lsp which expects postgrestools)
+            local postgres_lsp_binary = vim.fn.exepath("postgres-lsp")
+            if postgres_lsp_binary == "" then
+                postgres_lsp_binary = "/home/franciscallahan/code/Work/dadboduiPlugin/postgres-lsp/target/debug/postgres-lsp"
+            end
+
+            -- Only configure if the binary exists
+            if vim.fn.executable(postgres_lsp_binary) == 1 then
+                vim.lsp.config.postgres_lsp_custom = {
+                    cmd = { postgres_lsp_binary },
+                    filetypes = { "sql", "psql", "pgsql" },
+                    root_dir = function(bufnr, on_dir)
+                        local fname = vim.api.nvim_buf_get_name(bufnr)
+                        local root = vim.fs.root(bufnr, { ".postgres-lsp.toml", ".git" })
+                        on_dir(root or vim.fs.dirname(fname) or vim.uv.cwd())
+                    end,
+                    single_file_support = true,
+                    on_attach = on_attach,
+                    capabilities = capabilities,
+                }
+                vim.lsp.enable("postgres_lsp_custom")
+            else
+                vim.notify("postgres-lsp binary not found: " .. postgres_lsp_binary, vim.log.levels.WARN)
+            end
 
             -- csharp_ls is configured above as the primary C# LSP server
             -- OmniSharp and Roslyn LSP are disabled for better WSL compatibility

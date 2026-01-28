@@ -4,6 +4,9 @@ return {
     config = function()
         vim.keymap.set("n", "<leader>lr", ":LualineRenameTab ")
 
+		local theme_selector = require("tuliopaim.theme-selector")
+		local current = theme_selector.get_current_theme()
+
 		local lualine = require("lualine")
 
 		local conditions = {
@@ -64,7 +67,7 @@ return {
 		lualine.setup({
 			options = {
 				icons_enabled = true,
-				theme = "catppuccin",
+				theme = current.lualine_name,
                 component_separators = { left = "", right = "" },
                 section_separators = { left = "█", right = "█" },
 				disabled_filetypes = {

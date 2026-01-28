@@ -7,5 +7,5 @@ vim.opt_local.tabstop = 4
 vim.opt_local.expandtab = true
 vim.opt_local.commentstring = '// %s'
 
--- Enable inlay hints for C# files
-vim.lsp.inlay_hint.enable(true, { bufnr = 0 })
+-- Inlay hints disabled by default (can toggle with <leader>uh)
+-- vim.lsp.inlay_hint.enable(true, { bufnr = 0 })

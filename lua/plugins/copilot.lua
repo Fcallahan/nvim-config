@@ -21,6 +21,7 @@ return {
                         dismiss = "<C-]>",           -- Ctrl+] to dismiss
                     }
 				},
+                copilot_model = "gpt-4o-copilot",
 				panel = { enabled = false },
 				filetypes = {
 					["*"] = true,  -- Enable for all file types

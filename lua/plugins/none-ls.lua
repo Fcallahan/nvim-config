@@ -33,5 +33,17 @@ return {
 
         vim.keymap.set('n', '<leader>gf', vim.lsp.buf.format, {})
 
+        -- Auto-format on save with toggle
+        vim.g.auto_format_enabled = true
+
+        vim.api.nvim_create_autocmd("BufWritePre", {
+            pattern = "*",
+            callback = function()
+                if vim.g.auto_format_enabled then
+                    vim.lsp.buf.format({ async = false })
+                end
+            end,
+        })
+
     end,
 }

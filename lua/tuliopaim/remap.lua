@@ -61,6 +61,10 @@ vim.keymap.set({ "n", "v" }, "<leader>p", "\"0p")
 vim.keymap.set({ "n", "v" }, "<leader>y", [["+y]])
 vim.keymap.set({ "n", "v" }, "<leader>d", [["_d]])
 
+-- Paste over word/selection without losing clipboard
+vim.keymap.set('n', '-', '"_ciw<C-r>0<Esc>', { desc = 'Paste over word without losing clipboard' })
+vim.keymap.set('x', '-', '"_d"0p', { desc = 'Paste over selection without losing clipboard' })
+
 -- Press '<leader>fr' for quick find/replace for the word under the cursor
 vim.keymap.set("n", "<leader>fr", function()
     local cmd = ":%s/<C-r><C-w>/<C-r><C-w>/gI<Left><Left><Left>"
@@ -160,6 +164,12 @@ vim.keymap.set("n", "<leader>ns", ":enew | vsplit | terminal<CR>", { desc = "[N]
 
 -- Close split/buffer (similar to your ideavimrc <leader>x)
 vim.keymap.set("n", "<leader>x", ":q<CR>", { desc = "Close split/window" })
+
+-- Toggle auto-format on save
+vim.keymap.set("n", "<leader>tf", function()
+    vim.g.auto_format_enabled = not vim.g.auto_format_enabled
+    print("Auto-format on save: " .. (vim.g.auto_format_enabled and "enabled" or "disabled"))
+end, { desc = "[T]oggle [F]ormat on save" })
 
 -- Create TODO command to open daily notes in a float window
 vim.api.nvim_create_user_command("TODO", function()

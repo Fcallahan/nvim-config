@@ -13,6 +13,7 @@
 --     desc = "Auto-refresh DB cache on SQL file open"
 -- })
 
+
 -- SQL-specific keybindings (buffer-local)
 vim.keymap.set("n", "<leader>db", ":DBUIToggle<CR>", {
     buffer = true,
@@ -25,11 +26,15 @@ vim.keymap.set("n", "<leader>df", ":DBUIFindBuffer<CR>", {
 })
 
 vim.keymap.set("n", "<leader>dr", function()
-    vim.cmd("DBCompletionClearCache")
-    vim.notify("DB schema cache refreshed!", vim.log.levels.INFO)
+    local bufnr = vim.api.nvim_get_current_buf()
+    vim.lsp.buf.execute_command({
+        command = "postgres-lsp/refreshSchema",
+        arguments = { { uri = vim.uri_from_bufnr(bufnr) } },
+    })
+    vim.notify("postgres-lsp schema refresh requested", vim.log.levels.INFO)
 end, {
     buffer = true,
-    desc = "Refresh DB completion cache"
+    desc = "Refresh postgres-lsp schema"
 })
 
 -- Execute SQL under cursor/visual selection

@@ -14,6 +14,9 @@ return {
             local dotnet_helper = require("dotnet-tools.helpers")
             local ui = require("dapui")
 
+            -- Enable verbose DAP logging
+            dap.set_log_level('TRACE')
+
             -- Exception breakpoint state (toggleable)
             local exception_breakpoints = {
                 enabled = false,
@@ -141,6 +144,47 @@ return {
                 return vim.fn.input('Path to dll: ', sln_dir .. '/bin/Debug/net9.0/', 'file')
             end
 
+            -- Helper function to find and kill process on a specific port
+            local function kill_process_on_port(port)
+                if not port then return false end
+
+                -- Use 'ss' to find process using the port (reliable in WSL)
+                local cmd = string.format("ss -tlnp 2>/dev/null | grep ':%d ' | grep -oP 'pid=\\K[0-9]+'", port)
+                local handle = io.popen(cmd)
+                local pid_str = handle:read("*a")
+                handle:close()
+
+                if pid_str and pid_str ~= "" then
+                    local pid = tonumber(pid_str:match("%d+"))
+                    if pid then
+                        vim.notify(string.format("Found process %d on port %d, terminating...", pid, port), vim.log.levels.WARN)
+                        -- Try SIGTERM first, then SIGKILL
+                        os.execute(string.format("kill -TERM %d 2>/dev/null || kill -KILL %d 2>/dev/null", pid, pid))
+                        -- Verify after 1 second
+                        vim.defer_fn(function()
+                            if os.execute(string.format("ps -p %d > /dev/null 2>&1", pid)) == 0 then
+                                vim.notify(string.format("Process %d still alive, force killing...", pid), vim.log.levels.WARN)
+                                os.execute(string.format("kill -9 %d 2>/dev/null", pid))
+                            end
+                        end, 1000)
+                        return true
+                    end
+                end
+                return false
+            end
+
+            -- Helper to extract port from debug config
+            local function get_port_from_config(config)
+                if not config then return nil end
+
+                local env = config.env or {}
+                local app_url = env.ASPNETCORE_URLS or ""
+
+                -- Parse port from ASPNETCORE_URLS (format: "http://localhost:5156")
+                local port = app_url:match(":(%d+)")
+                return port and tonumber(port) or nil
+            end
+
             -- Use Mason-installed netcoredbg
             local mason_path = vim.fn.stdpath("data") .. "/mason/packages/netcoredbg/netcoredbg"
 
@@ -225,28 +269,70 @@ return {
 
             vim.keymap.set("n", "<leader>dr", dap.restart, { desc = "[D]ebug: [R]estart" })
             vim.keymap.set("n", "<leader>dx", function()
+                local last_config = dap.session() and dap.session().config or nil
+                local port = get_port_from_config(last_config)
+
                 dap.disconnect({ terminateDebuggee = true })
                 dap.close()
+
+                -- Also clean up port on regular exit
+                if port then
+                    vim.defer_fn(function()
+                        kill_process_on_port(port)
+                    end, 500)
+                end
             end, { desc = "[D]ebug: Stop/e[X]it" })
 
             -- Nuclear cleanup - forcefully terminate everything
             vim.keymap.set("n", "<leader>dX", function()
-                require('dap').terminate()
-                require('dap').disconnect({ terminateDebuggee = true })
-                require('dap').close()
+                local dap = require('dap')
+                local last_config = dap.session() and dap.session().config or nil
+                local port = get_port_from_config(last_config)
+
+                -- Standard cleanup sequence
+                dap.terminate()
+                dap.disconnect({ terminateDebuggee = true })
+                dap.close()
                 require('dapui').close()
                 require('nvim-dap-virtual-text').refresh()
-                vim.notify("DAP session cleaned up", vim.log.levels.INFO)
+
+                -- Schedule port cleanup check after brief delay for graceful shutdown
+                if port then
+                    vim.defer_fn(function()
+                        if kill_process_on_port(port) then
+                            vim.notify(string.format("DAP session cleaned up (forcefully killed process on port %d)", port), vim.log.levels.INFO)
+                        else
+                            vim.notify("DAP session cleaned up", vim.log.levels.INFO)
+                        end
+                    end, 500)  -- Wait 500ms for graceful shutdown
+                else
+                    vim.notify("DAP session cleaned up", vim.log.levels.INFO)
+                end
             end, { desc = "[D]ebug: Force cleanup (nuclear)" })
 
             -- User command for easy access
             vim.api.nvim_create_user_command('DapCleanup', function()
-                require('dap').terminate()
-                require('dap').disconnect({ terminateDebuggee = true })
-                require('dap').close()
+                local dap = require('dap')
+                local last_config = dap.session() and dap.session().config or nil
+                local port = get_port_from_config(last_config)
+
+                dap.terminate()
+                dap.disconnect({ terminateDebuggee = true })
+                dap.close()
                 require('dapui').close()
                 require('nvim-dap-virtual-text').refresh()
-                vim.notify("DAP session cleaned up", vim.log.levels.INFO)
+
+                if port then
+                    vim.defer_fn(function()
+                        if kill_process_on_port(port) then
+                            vim.notify(string.format("DAP session cleaned up (forcefully killed process on port %d)", port), vim.log.levels.INFO)
+                        else
+                            vim.notify("DAP session cleaned up", vim.log.levels.INFO)
+                        end
+                    end, 500)
+                else
+                    vim.notify("DAP session cleaned up", vim.log.levels.INFO)
+                end
             end, { desc = "Force cleanup all DAP connections" })
 
             vim.keymap.set("n", "<leader>de", function()
@@ -307,17 +393,14 @@ return {
                 end
             end
 
+            -- Keep console open on program termination/exit for inspection
+            -- User must manually close with <leader>dx
             dap.listeners.before.event_terminated.dapui_config = function(session, body)
-                -- Check if we stopped due to exception - give time to inspect
-                if body and body.reason == "exception" then
-                    vim.notify("Program terminated with exception - UI staying open", vim.log.levels.WARN)
-                    -- Don't auto-close, let user close manually with <leader>dx
-                    return
-                end
-                ui.close()
+                vim.notify("Program terminated - console staying open. Close with <leader>dx", vim.log.levels.INFO)
+                -- Don't auto-close UI, let user close manually
             end
             dap.listeners.before.event_exited.dapui_config = function()
-                ui.close()
+                -- Don't auto-close UI on exit either
             end
 		end,
 	},

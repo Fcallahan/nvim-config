@@ -131,13 +131,16 @@ local reference_content = {
       { "<leader>fs", "Git status" },
       { "<leader>fp", "Find keymaps" },
       { "<leader>fd", "Diagnostics" },
-      { "<leader>fr", "Find & replace" },
+      { "<leader>fr", "Find & replace (buf)" },
+      { "<leader>sr", "Search & replace (word)" },
+      { "<leader>sR", "Search & replace (all)" },
+      { "<leader>sf", "Search & replace (file)" },
     }
   },
   {
     section = "📝 LSP & CODE",
     priority = 6,
-    tags = {"lsp", "code", "definition", "reference"},
+    tags = {"lsp", "code", "definition", "reference", "ai", "copilot"},
     items = {
       { "gd / <leader>gd", "Go to definition" },
       { "gr", "Go to references" },
@@ -152,6 +155,14 @@ local reference_content = {
       { "]d / [d", "Next/prev diag" },
       { "]e / [e", "Next/prev error" },
       { "]w / [w", "Next/prev warn" },
+      { "<leader>cb", "AI (Copilot): Find bugs" },
+      { "<leader>ce", "AI (Copilot): Explain code" },
+      { "<leader>cc", "AI (Copilot): Custom prompt" },
+      { "<leader>ab/gb/zb", "AI fallback: Find bugs" },
+      { "<leader>ae/ge/ze", "AI fallback: Explain code" },
+      { "<leader>ac/gc/zc", "AI fallback: Custom prompt" },
+      { ":CopilotChat", "Open Copilot chat" },
+      { ":CopilotChatToggle", "Toggle Copilot chat" },
     }
   },
   {
@@ -171,8 +182,19 @@ local reference_content = {
     }
   },
   {
-    section = "🗂️ FILES",
+    section = "🎫 JIRA",
     priority = 8,
+    tags = {"jira", "issue", "ticket", "board", "jql"},
+    items = {
+      { "<leader>jo", "Open board" },
+      { "<leader>jc", "Create issue" },
+      { "<leader>jm", "Issue info by key" },
+      { "<leader>jq", "Custom JQL query" },
+    }
+  },
+  {
+    section = "🗂️ FILES",
+    priority = 9,
     tags = {"file", "buffer", "explorer", "harpoon"},
     items = {
       { "<leader>ef", "Reveal explorer" },
@@ -190,7 +212,7 @@ local reference_content = {
   },
   {
     section = "⚡ QUICK",
-    priority = 9,
+    priority = 10,
     tags = {"quick", "terminal", "clipboard"},
     items = {
       { "<leader>ref", "This overlay" },
@@ -208,7 +230,7 @@ local reference_content = {
   },
   {
     section = "🔖 TABS",
-    priority = 10,
+    priority = 11,
     tags = {"tab", "window"},
     items = {
       { "<leader>tN", "New tab" },
@@ -220,7 +242,7 @@ local reference_content = {
   },
   {
     section = "🗄️ DATABASE",
-    priority = 11,
+    priority = 12,
     tags = {"database", "sql", "dbui", "dadbod", "db", "cache", "postgres"},
     items = {
       { "<leader>db", "Toggle DBUI" },

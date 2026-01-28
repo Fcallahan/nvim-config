@@ -4,7 +4,6 @@ return {
         lazy = true,
         dependencies = {
             { "tpope/vim-dadbod",                     lazy = true },
-            { "kristijanhusak/vim-dadbod-completion", ft = { "sql", "mysql", "plsql" }, lazy = true },
         },
         cmd = {
             "DBUI",
@@ -20,16 +19,6 @@ return {
             vim.g.db_ui_use_nvim_notify = 0  -- Disabled to prevent conflicts with Snacks notifier
             vim.g.db_ui_win_position = "left"
             vim.g.db_ui_execute_on_save = 0
-
-            -- Completion settings
-            vim.g.vim_dadbod_completion_mark = '[DB]'  -- Visual indicator for DB completions
-
-            -- Limit completion results for better performance with large schemas
-            vim.g.vim_dadbod_completion_source_limits = {
-                tables = 100,   -- Max 100 table suggestions
-                schemas = 50,   -- Max 50 schema suggestions
-                columns = 200   -- Max 200 column suggestions
-            }
         end,
         config = function()
             -- Function to view DBUI connections
@@ -108,11 +97,106 @@ return {
                 vim.cmd("edit " .. connections_file)
             end, { desc = "Open DBUI connections.json" })
 
-            -- Keymap to refresh DB completion cache (fixes stale completions!)
-            vim.keymap.set("n", "<leader>dr", function()
-                vim.cmd("DBCompletionClearCache")
-                vim.notify("Database schema cache refreshed!", vim.log.levels.INFO)
-            end, { desc = "Refresh DB completion cache" })
+            -- DBUI to postgres-lsp integration
+            local function postgres_lsp_clients(bufnr)
+                if vim.lsp.get_clients then
+                    return vim.lsp.get_clients({ bufnr = bufnr, name = "postgres_lsp_custom" })
+                end
+
+                local clients = {}
+                for _, client in ipairs(vim.lsp.get_active_clients({ bufnr = bufnr })) do
+                    if client.name == "postgres_lsp_custom" then
+                        table.insert(clients, client)
+                    end
+                end
+                return clients
+            end
+
+            local function postgres_lsp_execute(bufnr, command, arguments)
+                local clients = postgres_lsp_clients(bufnr)
+                if #clients == 0 then
+                    return
+                end
+
+                local params = { command = command, arguments = arguments }
+                for _, client in ipairs(clients) do
+                    client.request("workspace/executeCommand", params, nil, bufnr)
+                end
+            end
+
+            local function dbui_url_for_buf(bufnr)
+                if vim.fn.exists("*db_ui#connections_list") == 0 then
+                    return nil
+                end
+
+                local key = vim.b[bufnr].dbui_db_key_name
+                if not key then
+                    return nil
+                end
+
+                local connections = vim.fn["db_ui#connections_list"]()
+                for _, conn in ipairs(connections) do
+                    local key_name = string.format("%s_%s", conn.name, conn.source)
+                    if key_name == key then
+                        local url = conn.url
+                        if type(url) ~= "string" then
+                            return nil
+                        end
+                        if not url:match("^postgres") then
+                            return nil
+                        end
+                        return url
+                    end
+                end
+            end
+
+            local function postgres_lsp_set_connection(bufnr)
+                local url = dbui_url_for_buf(bufnr)
+                if not url then
+                    return
+                end
+
+                postgres_lsp_execute(bufnr, "postgres-lsp/setConnection", {
+                    {
+                        connection_string = url,
+                        uri = vim.uri_from_bufnr(bufnr),
+                        set_default = true,
+                    },
+                })
+            end
+
+            vim.api.nvim_create_autocmd("FileType", {
+                pattern = { "sql", "psql", "pgsql" },
+                callback = function(args)
+                    if vim.b[args.buf].dbui_db_key_name then
+                        postgres_lsp_set_connection(args.buf)
+                    end
+                end,
+            })
+
+            vim.api.nvim_create_autocmd("LspAttach", {
+                callback = function(args)
+                    local client = vim.lsp.get_client_by_id(args.data.client_id)
+                    if not client or client.name ~= "postgres_lsp_custom" then
+                        return
+                    end
+                    if vim.b[args.buf].dbui_db_key_name then
+                        postgres_lsp_set_connection(args.buf)
+                    end
+                end,
+            })
+
+            vim.api.nvim_create_autocmd("User", {
+                pattern = "DBExecutePost",
+                callback = function()
+                    local bufnr = vim.api.nvim_get_current_buf()
+                    if vim.b[bufnr].dbui_db_key_name then
+                        postgres_lsp_execute(bufnr, "postgres-lsp/refreshSchema", {
+                            { uri = vim.uri_from_bufnr(bufnr) },
+                        })
+                    end
+                end,
+            })
 
             -- Define highlight setter functions
             local function set_dbui_highlights()
