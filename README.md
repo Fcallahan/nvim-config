@@ -27,6 +27,25 @@ nvim
 - **DAP Debugging**: netcoredbg integration with breakpoints, step debugging, variable inspection
 - **dotnet-tools.nvim**: Quick debug, test running, user secrets management
 
+## Recent Changes (2026-01-29)
+
+- **roslyn.nvim**: simplified config to use roslyn.nvim setup; disabled file watching + inlay hints; enabled code lens for refs/tests, richer completion, and full-solution background analysis; removed Razor/rzls custom wiring
+- **nvim-lspconfig**: inlay hints disabled globally + in LSP capabilities; added custom `postgres-lsp` client with fallback binary path and warning when missing
+- **nvim-dap / nvim-dap-ui**: enabled TRACE logging; added port-aware cleanup (kills stuck processes); keep UI open on termination for inspection
+- **none-ls.nvim**: added format-on-save with a global toggle
+- **vim-dadbod-ui**: removed `vim-dadbod-completion`; added DBUI → `postgres-lsp` integration (auto set connection, refresh schema after queries) and kept UI highlight overrides
+- **blink-cmp**: removed dadbod completion source/provider (now rely on `postgres-lsp`)
+- **CopilotChat.nvim**: added AI chat with visual prompts for bug-finding/explaining/custom prompts + fallback keymaps
+- **copilot.lua**: pinned model to `gpt-4o-copilot`
+- **codecompanion.nvim**: disabled (replaced by CopilotChat.nvim)
+- **ChatGPT.nvim**: stubbed to avoid lazy-loading errors after migration
+- **grug-far.nvim**: added search/replace UI with leader mappings and `:FindReplace` command
+- **jira.nvim**: added Jira integration via env vars + keymaps
+- **Theme system**: added theme selector module; lualine follows selected theme; catppuccin uses selector; new themes (tokyonight, gruvbox, kanagawa, nightfox) with transparent backgrounds; default selection currently tokyonight “moon”
+- **ftplugin/sql.lua**: schema refresh now uses `postgres-lsp` command
+- **ftplugin/cs.lua**: inlay hints disabled by default (aligns with global setting)
+- **custom-reference.lua**: keybinding overlay updated for AI, Jira, and search/replace
+
 ### Core Plugins
 | Plugin | Purpose |
 |--------|---------|
