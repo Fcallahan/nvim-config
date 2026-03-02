@@ -226,6 +226,13 @@ _   _                          _
     quickfile = { enabled = true },
     statuscolumn = { enabled = true },
     words = { enabled = true },
+    zen = {
+      toggles = {
+        dim = false,
+        git_signs = false,
+        mini_diff_signs = false,
+      },
+    },
   },
   keys = {
     { "<leader>fs",  function() Snacks.picker.smart({ hidden = true }) end, desc = "Find files - smart" },
