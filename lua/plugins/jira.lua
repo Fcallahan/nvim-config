@@ -30,8 +30,7 @@ return {
     },
     opts = {
         jira = {
-            -- Credentials loaded from environment variables only (no fallback)
-            -- Must be set in ~/.zshrc before launching Neovim
+            -- Keep env vars available for local fallback auth compatibility.
             base = vim.env.JIRA_BASE_URL,
             email = vim.env.JIRA_EMAIL,
             token = vim.env.JIRA_TOKEN,
@@ -56,5 +55,35 @@ return {
     },
     config = function(_, opts)
         require("jira").setup(opts)
+
+        local auth = require("jira.common.auth")
+        if auth._env_fallback_patched then
+            return
+        end
+
+        local original_load = auth.load
+
+        auth.load = function()
+            local stored = original_load() or {}
+            local merged = {
+                base = stored.base or vim.env.JIRA_BASE_URL,
+                email = stored.email or vim.env.JIRA_EMAIL,
+                token = stored.token or vim.env.JIRA_TOKEN,
+                type = (stored.type or vim.env.JIRA_AUTH_TYPE or "basic"):lower(),
+            }
+
+            local has_base = merged.base and merged.base ~= ""
+            local has_token = merged.token and merged.token ~= ""
+            local is_pat = merged.type == "pat"
+            local has_email = merged.email and merged.email ~= ""
+
+            if not has_base or not has_token or (not is_pat and not has_email) then
+                return nil
+            end
+
+            return merged
+        end
+
+        auth._env_fallback_patched = true
     end,
 }

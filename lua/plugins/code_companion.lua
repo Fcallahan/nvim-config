@@ -1,4 +1,4 @@
--- CodeCompanion.nvim has been disabled and uninstalled
--- Replaced with CopilotChat.nvim for AI-assisted coding
+-- CodeCompanion.nvim has been disabled and uninstalled.
+-- HmmAiChat is now configured in lua/plugins/hmm_ai_chat.lua.
 
 return {}

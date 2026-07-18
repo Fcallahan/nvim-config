@@ -38,10 +38,29 @@ return {
 
         vim.api.nvim_create_autocmd("BufWritePre", {
             pattern = "*",
-            callback = function()
-                if vim.g.auto_format_enabled then
-                    vim.lsp.buf.format({ async = false })
+            callback = function(args)
+                if not vim.g.auto_format_enabled then
+                    return
                 end
+
+                -- Skip markdown format-on-save to avoid formatter warnings in notes/docs.
+                if vim.bo[args.buf].filetype == "markdown" then
+                    return
+                end
+
+                local has_formatter = false
+                for _, client in ipairs(vim.lsp.get_clients({ bufnr = args.buf })) do
+                    if client.supports_method and client:supports_method("textDocument/formatting") then
+                        has_formatter = true
+                        break
+                    end
+                end
+
+                if not has_formatter then
+                    return
+                end
+
+                vim.lsp.buf.format({ async = false, bufnr = args.buf })
             end,
         })
 

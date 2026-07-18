@@ -127,7 +127,12 @@ return {
             -- Configure custom postgres-lsp (NOT the built-in postgres_lsp which expects postgrestools)
             local postgres_lsp_binary = vim.fn.exepath("postgres-lsp")
             if postgres_lsp_binary == "" then
-                postgres_lsp_binary = "/home/franciscallahan/code/Work/dadboduiPlugin/postgres-lsp/target/debug/postgres-lsp"
+                local release_binary = "/home/franciscallahan/code/Work/dadboduiPlugin/postgres-lsp/target/release/postgres-lsp"
+                if vim.fn.executable(release_binary) == 1 then
+                    postgres_lsp_binary = release_binary
+                else
+                    postgres_lsp_binary = "/home/franciscallahan/code/Work/dadboduiPlugin/postgres-lsp/target/debug/postgres-lsp"
+                end
             end
 
             -- Only configure if the binary exists
@@ -149,8 +154,8 @@ return {
                 vim.notify("postgres-lsp binary not found: " .. postgres_lsp_binary, vim.log.levels.WARN)
             end
 
-            -- csharp_ls is configured above as the primary C# LSP server
-            -- OmniSharp and Roslyn LSP are disabled for better WSL compatibility
+            -- Roslyn LSP is configured via roslyn.nvim and is the primary C# server
+            -- csharp_ls is intentionally disabled/excluded below
 
             -- Configure pylsp
             vim.lsp.config.pylsp = {
@@ -178,6 +183,9 @@ return {
                     "dockerls",
                     "eslint",
                     "ts_ls"
+                },
+                automatic_enable = {
+                    exclude = { "csharp_ls" },
                 },
                 automatic_installation = true
             }

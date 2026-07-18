@@ -6,15 +6,68 @@ return {
 		"lewis6991/gitsigns.nvim",
 		event = "VeryLazy",
 		config = function()
-			require("gitsigns").setup()
+			require("gitsigns").setup({
+				on_attach = function(bufnr)
+					local gs = package.loaded.gitsigns
+					local map = function(mode, l, r, desc)
+						vim.keymap.set(mode, l, r, { buffer = bufnr, desc = desc, expr = true })
+					end
+					-- Hunk navigation (defers to default ]c/[c in diff mode)
+					map("n", "]c", function()
+						if vim.wo.diff then return "]c" end
+						vim.schedule(function() gs.next_hunk() end)
+						return "<Ignore>"
+					end, "Next hunk")
+					map("n", "[c", function()
+						if vim.wo.diff then return "[c" end
+						vim.schedule(function() gs.prev_hunk() end)
+						return "<Ignore>"
+					end, "Prev hunk")
+				end,
+			})
 
             vim.keymap.set("n", "<leader>gb", ":Gitsigns toggle_current_line_blame<cr>")
+
+			-- PR review mode: diff against fork point from main
+			vim.api.nvim_create_user_command("Mergereview", function()
+				local base = vim.fn.system("git merge-base HEAD main"):gsub("%s+", "")
+				require("gitsigns").change_base(base, true)
+				require("gitsigns").toggle_linehl(true)
+				require("gitsigns").toggle_word_diff(true)
+				vim.notify("Review mode ON — base: " .. base:sub(1, 8))
+			end, {})
+
+			vim.api.nvim_create_user_command("Mergereviewend", function()
+				require("gitsigns").change_base(nil, true)
+				require("gitsigns").toggle_linehl(false)
+				require("gitsigns").toggle_word_diff(false)
+				vim.notify("Review mode OFF")
+			end, {})
 		end,
 	},
     {
 		"sindrets/diffview.nvim",
 		event = "VeryLazy",
         config = function()
+            -- Better diff algorithm for moved/reshuffled code
+            vim.opt.diffopt:append({
+                "internal",
+                "algorithm:histogram",
+                "indent-heuristic",
+                "linematch:60",
+            })
+
+            require("diffview").setup({
+                enhanced_diff_hl = true,  -- richer per-word diff highlights
+                hooks = {
+                    diff_buf_read = function(bufnr)
+                        -- Show the whole file diff — no collapsed regions
+                        vim.bo[bufnr].foldenable = false
+                        vim.bo[bufnr].foldlevel = 99
+                    end,
+                },
+            })
+
             vim.api.nvim_create_user_command('Gd', 'DiffviewOpen', {})
         end,
 	},
@@ -77,7 +130,7 @@ return {
                 },
                 file_panel = {
                     size = 10,
-                    use_icons = true,
+                    icons = true,
                 },
                 mappings = {
                     issue = {

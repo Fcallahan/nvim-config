@@ -1,5 +1,4 @@
--- ChatGPT.nvim has been migrated to CopilotChat.nvim
--- See copilot-chat.lua for the new configuration
--- This file is kept as a stub to prevent errors if lazy.nvim tries to load it
+-- ChatGPT.nvim has been disabled and uninstalled.
+-- HmmAiChat is now configured in lua/plugins/hmm_ai_chat.lua.
 
 return {}

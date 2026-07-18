@@ -20,7 +20,14 @@ vim.keymap.set("n", "<leader>db", ":DBUIToggle<CR>", {
     desc = "Toggle DBUI"
 })
 
-vim.keymap.set("n", "<leader>df", ":DBUIFindBuffer<CR>", {
+vim.keymap.set("n", "<leader>df", function()
+    vim.cmd("DBUIFindBuffer")
+    vim.schedule(function()
+        if vim.fn.exists(":PostgresLspConnectDBUI") == 2 then
+            vim.cmd("PostgresLspConnectDBUI")
+        end
+    end)
+end, {
     buffer = true,
     desc = "Find DB buffer"
 })

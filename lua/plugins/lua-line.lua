@@ -9,6 +9,23 @@ return {
 
 		local lualine = require("lualine")
 
+		local lualine_theme = current.lualine_name
+		if current.name == "aquarium" then
+			local ok, aquarium_theme = pcall(require, "lualine.themes.aquarium")
+			if ok then
+				for _, sections in pairs(aquarium_theme) do
+					for _, hl in pairs(sections) do
+						if type(hl.gui) == "string" then
+							hl.gui = hl.gui:gsub(",+", ","):gsub("^,", ""):gsub(",$", "")
+						end
+					end
+				end
+				lualine_theme = aquarium_theme
+			else
+				lualine_theme = "tokyonight"
+			end
+		end
+
 		local conditions = {
 			buffer_not_empty = function()
 				return vim.fn.empty(vim.fn.expand("%:t")) ~= 1
@@ -67,7 +84,7 @@ return {
 		lualine.setup({
 			options = {
 				icons_enabled = true,
-				theme = current.lualine_name,
+				theme = lualine_theme,
                 component_separators = { left = "", right = "" },
                 section_separators = { left = "█", right = "█" },
 				disabled_filetypes = {

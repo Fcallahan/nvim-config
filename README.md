@@ -99,6 +99,13 @@ Leader key: `<Space>`
 | `<leader><leader>` | Find buffers |
 | `-` | Open Oil file explorer |
 
+### Files
+| Key | Action |
+|-----|--------|
+| `<leader>eb` | Open current file in browser |
+| `<leader>ef` | Reveal current file in OS explorer |
+| `<leader>eo` | Open current file directory in OS explorer |
+
 ### LSP
 | Key | Action |
 |-----|--------|

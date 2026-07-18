@@ -7,8 +7,8 @@ return {
         filewatching = "off",
         -- Search for solution files in child directories
         broad_search = true,
-        -- Lock solution target after first attach
-        lock_target = true,
+        -- Allow retargeting when switching between different C# projects
+        lock_target = false,
     },
     config = function(_, opts)
         -- Configure ONLY LSP settings via vim.lsp.config

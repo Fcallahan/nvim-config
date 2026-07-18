@@ -1,56 +1,40 @@
 local M = {}
 
--- Theme registry with all available themes and their variants
--- Commented out because I want to just use tokyonight moon
--- M.themes = {
--- 	{
--- 		name = "catppuccin",
--- 		flavors = { "frappe", "macchiato", "mocha" },
--- 		lualine_name = "catppuccin",
--- 	},
--- 	{
--- 		name = "tokyonight",
--- 		flavors = { "night", "storm", "moon" },
--- 		lualine_name = "tokyonight",
--- 	},
--- 	-- {
--- 	-- 	name = "gruvbox",
--- 	-- 	flavors = { "dark", "light" },
--- 	-- 	lualine_name = "gruvbox",
--- 	-- 	setup_fn = function(flavor)
--- 	-- 		vim.o.background = flavor
--- 	-- 	end,
--- 	-- },
--- 	-- {
--- 	-- 	name = "kanagawa",
--- 	-- 	flavors = { "wave", "dragon", "lotus" },
--- 	-- 	lualine_name = "kanagawa",
--- 	-- },
--- 	{
--- 		name = "nightfox",
--- 		flavors = { "nightfox", "duskfox", "nordfox", "terafox", "carbonfox" },
--- 		lualine_name = "nightfox",
--- 	},
--- }
+--M.active_theme = "chadracula-evondev"
+M.active_theme = "neon"
+
+-- Theme registry with available themes and their variants
 M.themes = {
 	{
 		name = "tokyonight",
-		flavors = { "moon" },
+		flavors = { "night", "storm", "moon" },
 		lualine_name = "tokyonight",
 	},
-	-- {
-	-- 	name = "gruvbox",
-	-- 	flavors = { "dark", "light" },
-	-- 	lualine_name = "gruvbox",
-	-- 	setup_fn = function(flavor)
-	-- 		vim.o.background = flavor
-	-- 	end,
-	-- },
-	-- {
-	-- 	name = "kanagawa",
-	-- 	flavors = { "wave", "dragon", "lotus" },
-	-- 	lualine_name = "kanagawa",
-	-- },
+	{
+		name = "aquarium",
+		flavors = { "aquarium" },
+		lualine_name = "auto",
+	},
+	{
+		name = "chadracula-evondev",
+		flavors = { "chadracula-evondev" },
+		lualine_name = "auto",
+	},
+	{
+		name = "neon",
+		flavors = { "cherrykiss-storm", "cyberpunk-storm", "netrunner-storm", "punkpeach-storm", "cherrykiss-night", "cyberpunk-night", "netrunner-night", "punkpeach-night" },
+		lualine_name = "auto",
+	},
+	{
+		name = "everblush",
+		flavors = { "everblush" },
+		lualine_name = "auto",
+	},
+	{
+		name = "oxocarbon",
+		flavors = { "oxocarbon" },
+		lualine_name = "auto",
+	},
 }
 
 -- Select a random theme from the registry
@@ -60,6 +44,22 @@ function M.select_random_theme()
 	-- Return cached selection if it already exists
 	if vim.g.current_theme_selection then
 		return vim.g.current_theme_selection
+	end
+
+	if M.active_theme then
+		for _, theme in ipairs(M.themes) do
+			if theme.name == M.active_theme then
+				local selection = {
+					name = theme.name,
+					flavor = theme.flavors[1],
+					lualine_name = theme.lualine_name,
+					setup_fn = theme.setup_fn,
+				}
+
+				vim.g.current_theme_selection = selection
+				return selection
+			end
+		end
 	end
 
 	-- Generate truly random selection using current time as seed

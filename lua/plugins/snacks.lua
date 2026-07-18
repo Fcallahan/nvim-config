@@ -221,7 +221,19 @@ _   _                          _
     },
     indent = { enabled = true },
     input = { enabled = true },
-    picker = { enabled = true, ui_select = true },
+    picker = {
+      enabled = true,
+      ui_select = true,
+      sources = {
+        explorer = {
+          layout = {
+            layout = {
+              position = "right",
+            },
+          },
+        },
+      },
+    },
     notifier = { enabled = true },
     quickfile = { enabled = true },
     statuscolumn = { enabled = true },

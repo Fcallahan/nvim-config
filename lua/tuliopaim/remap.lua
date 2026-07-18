@@ -171,44 +171,32 @@ vim.keymap.set("n", "<leader>tf", function()
     print("Auto-format on save: " .. (vim.g.auto_format_enabled and "enabled" or "disabled"))
 end, { desc = "[T]oggle [F]ormat on save" })
 
--- Create TODO command to open daily notes in a float window
+-- TD notes in ~/vault
 vim.api.nvim_create_user_command("TODO", function()
-    -- Expand the home directory path
-    local file_path = vim.fn.expand("~/vault/DAILY NOTES.md")
+    require("tuliopaim.todo").open()
+end, {})
 
-    -- Calculate window size (% of editor size)
-    local width = math.floor(vim.api.nvim_get_option("columns") * 0.6)
-    local height = math.floor(vim.api.nvim_get_option("lines") * 0.8)
+vim.api.nvim_create_user_command("TodoNew", function()
+    require("tuliopaim.todo").new()
+end, {})
 
-    -- Calculate starting position to center the window
-    local row = 0
-    local col = math.floor((vim.api.nvim_get_option("columns") - width))
+vim.api.nvim_create_user_command("TodoNext", function()
+    require("tuliopaim.todo").next()
+end, {})
 
-    -- Create the floating window
-    local buf = vim.api.nvim_create_buf(false, true)
-    local win_opts = {
-        relative = "editor",
-        width = width,
-        height = height,
-        row = row,
-        col = col,
-        style = "minimal",
-        border = "rounded",
-    }
+vim.api.nvim_create_user_command("TodoPrev", function()
+    require("tuliopaim.todo").prev()
+end, {})
 
-    local win = vim.api.nvim_open_win(buf, true, win_opts)
-
-    -- Set some window options
-    vim.api.nvim_win_set_option(win, "winblend", 0)
-    vim.api.nvim_win_set_option(win, "wrap", true)
-    vim.api.nvim_win_set_option(win, "relativenumber", true)
-    vim.api.nvim_win_set_option(win, "number", true)
-
-    -- Try to read the file into the buffer
-    vim.api.nvim_command("edit " .. file_path)
+vim.api.nvim_create_user_command("TodoDelete", function()
+    require("tuliopaim.todo").delete_current()
 end, {})
 
 vim.keymap.set("n", "<leader>td", ":TODO<CR>", { desc = "[T]o [D]o" })
+vim.keymap.set("n", "<leader>ntd", ":TodoNew<CR>", { desc = "[N]ew [T]o [D]o page" })
+vim.keymap.set("n", "<leader>ftd", ":TodoNext<CR>", { desc = "[F]orward [T]o [D]o page" })
+vim.keymap.set("n", "<leader>btd", ":TodoPrev<CR>", { desc = "[B]ack [T]o [D]o page" })
+vim.keymap.set("n", "<leader>xtd", ":TodoDelete<CR>", { desc = "Delete [T]o [D]o page" })
 
 -- Custom reference overlay
 vim.keymap.set("n", "<leader>ref", function()
@@ -219,43 +207,152 @@ end, { desc = "Toggle quick reference overlay" })
 vim.keymap.set({"n", "v"}, "<C-c>", '"+y', { desc = "Copy to system clipboard" })
 vim.keymap.set({"n", "v"}, "<C-v>", '"+p', { desc = "Paste from system clipboard" })
 vim.keymap.set("i", "<C-v>", '<C-r>+', { desc = "Paste from system clipboard in insert mode" })
+vim.keymap.set("n", "<leader>cp", function()
+    local cwd = vim.fn.getcwd()
+    vim.fn.setreg("+", cwd)
+    vim.notify("Copied cwd: " .. cwd)
+end, { desc = "Copy current working directory" })
 
--- Reveal in File Explorer (Windows WSL)
-vim.keymap.set("n", "<leader>ef", function()
+vim.keymap.set("n", "<leader>cP", function()
     local file_path = vim.fn.expand("%:p")
 
     if file_path == "" then
+        vim.notify("No file path to copy", vim.log.levels.WARN)
         return
     end
 
-    -- Get directory containing the file
-    local dir_path = vim.fn.expand("%:p:h")
+    vim.fn.setreg("+", file_path)
+    vim.notify("Copied file path: " .. file_path)
+end, { desc = "Copy current file path" })
 
-    -- Use wslpath to properly convert WSL path to Windows path
-    local win_path = vim.fn.system("wslpath -w '" .. dir_path .. "'")
-    win_path = win_path:gsub("\n", ""):gsub("\r", ""):gsub("\\", "\\\\") -- Remove newlines and escape backslashes
+local function find_explorer_command()
+    if vim.fn.executable("explorer.exe") == 1 then
+        return "explorer.exe"
+    end
 
-    -- Open the directory
-    vim.fn.system('explorer.exe "' .. win_path .. '"')
+    local candidates = {
+        "/mnt/c/Windows/explorer.exe",
+        "/mnt/c/Windows/System32/explorer.exe",
+    }
+
+    for _, candidate in ipairs(candidates) do
+        if vim.fn.filereadable(candidate) == 1 then
+            return candidate
+        end
+    end
+
+    return nil
+end
+
+local function find_windows_cmd_command()
+    if vim.fn.executable("cmd.exe") == 1 then
+        return "cmd.exe"
+    end
+
+    local candidates = {
+        "/mnt/c/Windows/System32/cmd.exe",
+        "/mnt/c/Windows/cmd.exe",
+    }
+
+    for _, candidate in ipairs(candidates) do
+        if vim.fn.filereadable(candidate) == 1 then
+            return candidate
+        end
+    end
+
+    return nil
+end
+
+local function open_current_file_in_browser()
+    local file_path = vim.fn.expand("%:p")
+
+    if file_path == "" then
+        vim.notify("No file is open", vim.log.levels.WARN)
+        return
+    end
+
+    if vim.fn.filereadable(file_path) == 0 then
+        vim.notify("Current file does not exist on disk yet", vim.log.levels.WARN)
+        return
+    end
+
+    if vim.fn.executable("wslview") == 1 then
+        vim.fn.system({ "wslview", file_path })
+        if vim.v.shell_error == 0 then
+            return
+        end
+    end
+
+    if vim.fn.executable("xdg-open") == 1 then
+        vim.fn.system({ "xdg-open", file_path })
+        if vim.v.shell_error == 0 then
+            return
+        end
+    end
+
+    local cmd_command = find_windows_cmd_command()
+    if vim.fn.executable("wslpath") == 1 and cmd_command then
+        local win_path = vim.trim(vim.fn.system({ "wslpath", "-w", file_path }))
+        if vim.v.shell_error == 0 and win_path ~= "" then
+            vim.fn.system({ cmd_command, "/C", "start", "", win_path })
+            if vim.v.shell_error == 0 then
+                return
+            end
+        end
+    end
+
+    vim.notify("No browser opener found (wslview, xdg-open, cmd.exe)", vim.log.levels.ERROR)
+end
+
+local function open_in_windows_explorer(select_file)
+    local file_path = vim.fn.expand("%:p")
+    if file_path == "" then
+        vim.notify("No file is open", vim.log.levels.WARN)
+        return
+    end
+
+    local target_path = select_file and file_path or vim.fn.expand("%:p:h")
+    local explorer_command = find_explorer_command()
+
+    -- Try wslpath + explorer.exe (WSL → Windows path conversion)
+    if vim.fn.executable("wslpath") == 1 and explorer_command then
+        local win_path = vim.trim(vim.fn.system({ "wslpath", "-w", target_path }))
+        if vim.v.shell_error == 0 and win_path ~= "" then
+            if select_file then
+                vim.fn.jobstart({ explorer_command, "/select," .. win_path }, { detach = true })
+            else
+                vim.fn.jobstart({ explorer_command, win_path }, { detach = true })
+            end
+            return
+        end
+    end
+
+    -- Fall back to wslview
+    if vim.fn.executable("wslview") == 1 then
+        vim.fn.jobstart({ "wslview", target_path }, { detach = true })
+        return
+    end
+
+    -- Fall back to xdg-open
+    if vim.fn.executable("xdg-open") == 1 then
+        vim.fn.jobstart({ "xdg-open", target_path }, { detach = true })
+        return
+    end
+
+    vim.notify("No file opener found (explorer.exe, wslview, xdg-open)", vim.log.levels.ERROR)
+end
+
+vim.keymap.set("n", "<leader>ef", function()
+    open_in_windows_explorer(true)
 end, { desc = "[E]xplorer reveal [F]ile" })
 
+vim.keymap.set("n", "<leader>eb", function()
+    open_current_file_in_browser()
+end, { desc = "[E]xplorer open in [B]rowser" })
+
 vim.keymap.set("n", "<leader>eo", function()
-    local file_path = vim.fn.expand("%:p")
-
-    if file_path == "" then
-        return
-    end
-
-    -- Get directory containing the file
-    local dir_path = vim.fn.expand("%:p:h")
-
-    -- Use wslpath to properly convert WSL path to Windows path
-    local win_path = vim.fn.system("wslpath -w '" .. dir_path .. "'")
-    win_path = win_path:gsub("\n", ""):gsub("\r", ""):gsub("\\", "\\\\") -- Remove newlines and escape backslashes
-
-    -- Open the directory
-    vim.fn.system('explorer.exe "' .. win_path .. '"')
-end, { desc = "[E]xplorer [O]pen current file" })
+    open_in_windows_explorer(false)
+end, { desc = "[E]xplorer [O]pen directory" })
 
 -- Avante
 vim.api.nvim_create_user_command('AvanteReset', function()

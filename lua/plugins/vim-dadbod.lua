@@ -98,6 +98,8 @@ return {
             end, { desc = "Open DBUI connections.json" })
 
             -- DBUI to postgres-lsp integration
+            local dbui_connection_marks = {}
+
             local function postgres_lsp_clients(bufnr)
                 if vim.lsp.get_clients then
                     return vim.lsp.get_clients({ bufnr = bufnr, name = "postgres_lsp_custom" })
@@ -115,13 +117,14 @@ return {
             local function postgres_lsp_execute(bufnr, command, arguments)
                 local clients = postgres_lsp_clients(bufnr)
                 if #clients == 0 then
-                    return
+                    return 0
                 end
 
                 local params = { command = command, arguments = arguments }
                 for _, client in ipairs(clients) do
                     client.request("workspace/executeCommand", params, nil, bufnr)
                 end
+                return #clients
             end
 
             local function dbui_url_for_buf(bufnr)
@@ -150,22 +153,57 @@ return {
                 end
             end
 
-            local function postgres_lsp_set_connection(bufnr)
+            local function postgres_lsp_set_connection(bufnr, force)
                 local url = dbui_url_for_buf(bufnr)
                 if not url then
                     return
                 end
 
-                postgres_lsp_execute(bufnr, "postgres-lsp/setConnection", {
-                    {
-                        connection_string = url,
-                        uri = vim.uri_from_bufnr(bufnr),
-                        set_default = true,
-                    },
-                })
+                local clients = postgres_lsp_clients(bufnr)
+                if #clients == 0 then
+                    return
+                end
+
+                local key = vim.b[bufnr].dbui_db_key_name
+                dbui_connection_marks[bufnr] = dbui_connection_marks[bufnr] or {}
+
+                for _, client in ipairs(clients) do
+                    local mark = string.format("%s:%s:%s", client.id, key, url)
+                    if force or dbui_connection_marks[bufnr][client.id] ~= mark then
+                        local params = {
+                            command = "postgres-lsp/setConnection",
+                            arguments = {
+                                {
+                                    connection_string = url,
+                                    uri = vim.uri_from_bufnr(bufnr),
+                                    set_default = true,
+                                },
+                            },
+                        }
+
+                        client.request("workspace/executeCommand", params, function(err)
+                            if err then
+                                dbui_connection_marks[bufnr][client.id] = nil
+                                vim.schedule(function()
+                                    vim.notify("postgres-lsp DBUI connection failed: " .. tostring(err.message or err), vim.log.levels.WARN)
+                                end)
+                                return
+                            end
+
+                            dbui_connection_marks[bufnr][client.id] = mark
+                        end, bufnr)
+                    end
+                end
             end
 
+            vim.api.nvim_create_user_command("PostgresLspConnectDBUI", function()
+                postgres_lsp_set_connection(vim.api.nvim_get_current_buf(), true)
+            end, {
+                desc = "Connect postgres-lsp to the current DBUI SQL buffer"
+            })
+
             vim.api.nvim_create_autocmd("FileType", {
+                group = vim.api.nvim_create_augroup("DBUIPostgresLsp", { clear = true }),
                 pattern = { "sql", "psql", "pgsql" },
                 callback = function(args)
                     if vim.b[args.buf].dbui_db_key_name then
@@ -174,7 +212,25 @@ return {
                 end,
             })
 
+            vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
+                group = vim.api.nvim_create_augroup("DBUIPostgresLspBufferEnter", { clear = true }),
+                callback = function(args)
+                    if not vim.tbl_contains({ "sql", "psql", "pgsql" }, vim.bo[args.buf].filetype) then
+                        return
+                    end
+
+                    if vim.b[args.buf].dbui_db_key_name then
+                        vim.schedule(function()
+                            if vim.api.nvim_buf_is_valid(args.buf) then
+                                postgres_lsp_set_connection(args.buf)
+                            end
+                        end)
+                    end
+                end,
+            })
+
             vim.api.nvim_create_autocmd("LspAttach", {
+                group = vim.api.nvim_create_augroup("DBUIPostgresLspAttach", { clear = true }),
                 callback = function(args)
                     local client = vim.lsp.get_client_by_id(args.data.client_id)
                     if not client or client.name ~= "postgres_lsp_custom" then
@@ -187,6 +243,7 @@ return {
             })
 
             vim.api.nvim_create_autocmd("User", {
+                group = vim.api.nvim_create_augroup("DBUIPostgresLspRefresh", { clear = true }),
                 pattern = "DBExecutePost",
                 callback = function()
                     local bufnr = vim.api.nvim_get_current_buf()

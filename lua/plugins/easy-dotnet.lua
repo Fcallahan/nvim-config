@@ -23,11 +23,14 @@ return {
 			-- Test runner settings (basic features only, debugging handled by neotest-vstest)
 			test_runner = {
 				viewmode = "float", -- Options: "split", "vsplit", "float", "buf"
-				noBuild = true, -- Skip build (neotest-vstest handles builds)
+				auto_start_testrunner = false,
 			},
 
 			-- Picker integration (using telescope)
 			picker = "telescope",
+
+			-- Avoid starting the easy-dotnet server on first C# file open
+			background_scanning = false,
 
 			-- Auto-mappings for project files
 			csproj_mappings = true,
@@ -85,9 +88,9 @@ return {
 		end, { desc = "[C]# Run [t]ests" })
 
 		-- Project management
-		keymap("n", "<leader>cp", function()
+		keymap("n", "<leader>cO", function()
 			vim.cmd("Dotnet outdated")
-		end, { desc = "[C]# Check outdated [p]ackages" })
+		end, { desc = "[C]# Check [O]utdated packages" })
 
 		keymap("n", "<leader>cs", function()
 			vim.cmd("Dotnet secrets")
