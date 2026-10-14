@@ -513,6 +513,8 @@ local function attach_diffview_buffer(bufnr)
   vim.wo.number = true
   vim.wo.cursorline = true
   vim.wo.cursorcolumn = false
+  vim.wo.scrollbind = true
+  vim.wo.cursorbind = true
   map_review_keys(bufnr)
   local file = diffview_file_from_buf(bufnr)
   local side = diffview_side_from_buf(bufnr)
@@ -581,7 +583,7 @@ function M.start()
   end
 
   if not state.root or not state.json_path then
-    notify("Missing PI_REVIEW_* environment variables", vim.log.levels.ERROR)
+    notify("Start reviews from Pi with /review (Pi supplies the review session automatically)", vim.log.levels.ERROR)
     return
   end
 

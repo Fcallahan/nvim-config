@@ -7,7 +7,7 @@ vim.api.nvim_create_user_command('PiReview', function()
         return
     end
     mod.start()
-end, { desc = "Start Pi review session (requires PI_REVIEW_* env vars)" })
+end, { desc = "Start a review launched from Pi's /review command" })
 
 vim.api.nvim_create_user_command('HelpReview', function()
     local buf = vim.api.nvim_create_buf(false, true)

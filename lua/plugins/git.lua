@@ -60,15 +60,23 @@ return {
             require("diffview").setup({
                 enhanced_diff_hl = true,  -- richer per-word diff highlights
                 hooks = {
-                    diff_buf_read = function(bufnr)
+                    diff_buf_read = function()
                         -- Show the whole file diff — no collapsed regions
-                        vim.bo[bufnr].foldenable = false
-                        vim.bo[bufnr].foldlevel = 99
+                        vim.wo.foldenable = false
+                        vim.wo.foldlevel = 99
+                    end,
+                    view_changed = function()
+                        -- Enforce scrollbind so left/right panels scroll together
+                        vim.wo.scrollbind = true
+                        vim.wo.cursorbind = true
                     end,
                 },
             })
 
             vim.api.nvim_create_user_command('Gd', 'DiffviewOpen', {})
+            vim.api.nvim_create_user_command('Gdm', 'DiffviewOpen origin/master...HEAD', {
+                desc = 'Review branch changes against the merge base with origin/master',
+            })
         end,
 	},
     -- litee.nvim family for panel-based UI (required by Octo)

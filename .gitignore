@@ -1,5 +1,3 @@
-# Lazy.nvim plugin manager
-lazy-lock.json
 
 # LSP workspace config
 .luarc.json

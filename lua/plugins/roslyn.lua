@@ -14,6 +14,11 @@ return {
         -- Configure ONLY LSP settings via vim.lsp.config
         -- Let roslyn.nvim handle cmd and LSP initialization to prevent duplicate attachments
         vim.lsp.config("roslyn", {
+            handlers = {
+                -- roslyn.nvim assumes _refresh exists before Nvim 0.13, but it was removed
+                -- from this 0.12-dev build. The refresh is unnecessary once the API is gone.
+                ["workspace/projectInitializationComplete"] = function() end,
+            },
             settings = {
                 -- Inlay hints disabled to prevent crashes from invalid column positions
                 ["csharp|inlay_hints"] = {

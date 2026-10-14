@@ -14,8 +14,18 @@ return {
             { "<leader>cn", mode = "n", desc = "HmmAiChat: new chat" },
         },
         config = function()
-            -- Use the shell env var so ~/.zshrc changes take effect without editing this file
-            vim.env.OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY") or vim.env.OPENROUTER_API_KEY
+            -- Prefer shell env var, fall back to pi's OpenRouter key from auth.json
+            local key = os.getenv("OPENROUTER_API_KEY")
+            if not key or key == "" then
+                local ok, lines = pcall(vim.fn.readfile, vim.fn.expand("~/.pi/agent/auth.json"))
+                if ok and lines then
+                    local ok2, parsed = pcall(vim.json.decode, table.concat(lines, "\n"))
+                    if ok2 and parsed and parsed.openrouter and parsed.openrouter.key then
+                        key = parsed.openrouter.key
+                    end
+                end
+            end
+            vim.env.OPENROUTER_API_KEY = key or ""
             require("hmm_ai_chat").setup({
                 model = "deepseek/deepseek-chat",
                 keymaps = {

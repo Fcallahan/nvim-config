@@ -8,6 +8,14 @@ return {
 			require("copilot").setup({
                 enabled = true,
                 auto_refresh = true,
+                -- WSL has no automatically unlocked Secret Service; Copilot already falls back to
+                -- plaintext token storage. Make that explicit and silence Node's SQLite warning.
+                copilot_node_command = {
+                    "env",
+                    "GITHUB_COPILOT_AUTH_TOKEN_ENCRYPTION=false",
+                    "NODE_NO_WARNINGS=1",
+                    "node",
+                },
 				suggestion = {
 					enabled = true,
                     auto_trigger = true,

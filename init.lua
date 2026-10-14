@@ -1,5 +1,4 @@
-require("tuliopaim.set")
-require("tuliopaim.remap")
+require("tuliopaim")
 require("tuliopaim.doc-colors").setup()
 
 -- Ensure .NET SDK is visible to language servers and dotnet tools are accessible
@@ -26,4 +25,6 @@ vim.opt.rtp:prepend(lazypath)
 require("lazy").setup({
     spec = "plugins",
     change_detection = { notify = false },
+    -- No configured plugin requires LuaRocks; disable its missing-runtime health error.
+    rocks = { enabled = false },
 })
